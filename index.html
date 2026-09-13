@@ -427,6 +427,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
    through the artifact `db` capability when the page is published.
    ===================================================================== */
 
+const BUILD = 6;          // bump on every publish — shown on the Memory tab
 const DAY = 86400000;
 const MIN = 60000;
 const NAV = [
@@ -1589,6 +1590,9 @@ function viewMemory(){
       <button class="btn" data-act="import">Import backup</button>
       <button class="btn danger" data-act="reset">Reset everything</button>
     </div>
+    <p class="small muted" style="margin-top:14px;font-family:var(--mono)">
+      Build ${BUILD} · ${S.subjects.length} subjects · ${S.cards.length} cards.
+      Seeing an older build? Close the tab and open the link again.</p>
   </section>`;
 }
 
