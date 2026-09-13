@@ -418,7 +418,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
    through the artifact `db` capability when the page is published.
    ===================================================================== */
 
-const BUILD = 7;          // bump on every publish — shown on the Memory tab
+const BUILD = 8;          // bump on every publish — shown on the Memory tab
 const DAY = 86400000;
 const MIN = 60000;
 const NAV = [
@@ -597,11 +597,28 @@ const Store = {
 const AI = {
   sample: null,
   resolved: false,        // false until we know whether the writer is available
+  states: null,           // what the viewer says this page is allowed, when it isn't
   async connect(){
-    try { this.sample = (window.claude && window.claude.use) ? await window.claude.use("sample") : null; }
+    const use = (window.claude && window.claude.use) ? window.claude.use : null;
+    try { this.sample = use ? await use("sample") : null; }
     catch(e){ this.sample = null; }
+    if (!this.sample && use){
+      /* Ask what this view actually offers, so the page can say why rather
+         than shrugging. state() reads without prompting anyone. */
+      try {
+        const perms = await use("permissions");
+        this.states = perms ? await perms.state() : null;
+      } catch(e){ this.states = null; }
+    }
     this.resolved = true;
     return this.sample;
+  },
+  diagnosis(){
+    if (!window.claude) return "opened as a plain web page, outside Claude";
+    if (!this.states) return "this view offers the page no capabilities";
+    const keys = Object.keys(this.states);
+    if (!keys.length) return "this view offers the page no capabilities";
+    return keys.map(k => `${k}: ${this.states[k]}`).join(" · ");
   }
 };
 
@@ -722,11 +739,21 @@ function renderGen(){
 }
 
 function genPanelHTML(){
+  if (!AI.resolved){
+    return `<div class="row"><span class="spinner" aria-hidden="true"></span>
+      <b>Getting the card writer ready…</b></div>`;
+  }
   if (!AI.sample){
     return `<div class="banner"><span class="ic">✎</span><div>
-      <b>Writing cards for you isn't available here.</b> It needs to ask Claude on your account, which only works
-      on the published version of the app with permission granted. Use the box below to type cards out, or paste a
-      whole lesson's worth at once.</div></div>`;
+      <b>This copy of the app can't reach Claude,</b> so it can't write cards for you here. Two things to try:
+      <ol style="margin:8px 0 0;padding-left:20px;line-height:1.6">
+        <li>Open the app from your <b>Artifacts list inside Claude</b> rather than as a plain web page — the
+          writer only works in Claude's own viewer.</li>
+        <li>If you were asked for permission and dismissed it, reload the page and allow it.</li>
+      </ol>
+      <p style="margin-top:8px">Meanwhile the box below writes cards by hand, and takes a whole lesson pasted in one go.</p>
+      <p class="small muted" style="margin-top:8px;font-family:var(--mono)">${esc(AI.diagnosis())}</p>
+    </div></div>`;
   }
   if (gen.status === "thinking" || gen.status === "writing"){
     return `<div class="stack">
@@ -1494,7 +1521,7 @@ function viewCards(){
       <button class="btn primary" data-act="add-card">Add card</button>
       <button class="btn" data-act="toggle-bulk">Paste a whole list</button>
     </div>
-    <div id="bulkBox" hidden style="margin-top:14px">
+    <div id="bulkBox"${AI.resolved && !AI.sample ? "" : " hidden"} style="margin-top:14px">
       <label class="field">One per line, question and answer split by <code>|</code> — or start a line with <code>#</code> to set the topic.
         <textarea id="adBulk" rows="7" placeholder="# Photosynthesis
 What gas do plants take in? | Carbon dioxide
