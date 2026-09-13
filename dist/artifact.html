@@ -418,7 +418,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
    through the artifact `db` capability when the page is published.
    ===================================================================== */
 
-const BUILD = 9;          // bump on every publish — shown on the Memory tab
+const BUILD = 10;         // bump on every publish — shown on the Memory tab
 const DAY = 86400000;
 const MIN = 60000;
 const NAV = [
@@ -747,14 +747,21 @@ function genPanelHTML(){
       <b>Getting the card writer ready…</b></div>`;
   }
   if (!AI.sample){
+    /* No Claude runtime at all means this is the standalone copy on an
+       ordinary web host — a different situation from a viewer that has the
+       runtime but won't grant it. */
+    const standalone = !window.claude;
     return `<div class="banner"><span class="ic">✎</span><div>
-      <b>This copy of the app can't reach Claude,</b> so it can't write cards for you here. Two things to try:
-      <ol style="margin:8px 0 0;padding-left:20px;line-height:1.6">
-        <li>Open the app from your <b>Artifacts list inside Claude</b> rather than as a plain web page — the
-          writer only works in Claude's own viewer.</li>
-        <li>If you were asked for permission and dismissed it, reload the page and allow it.</li>
-      </ol>
-      <p style="margin-top:8px">Meanwhile the box below writes cards by hand, and takes a whole lesson pasted in one go.</p>
+      ${standalone ? `<b>This is the standalone copy of the app.</b> It's a plain web page, so there's no Claude
+        here to write your cards — everything else works exactly the same. To have topics turned into questions,
+        open the <b>Claude Artifact version</b> instead; that copy can ask Claude on your account, and syncs
+        between your phone and laptop.
+        <p style="margin-top:8px">Your cards live in the browser, per copy, so the two don't share anything.
+          To move what you've already made: <b>Memory → Export backup</b> here, then
+          <b>Memory → Import backup</b> over there.</p>`
+      : `<b>Claude isn't reachable from this page,</b> so it can't write cards for you. If you were asked for
+        permission and dismissed it, reload and allow it.`}
+      <p style="margin-top:8px">Either way, the box below writes cards by hand and takes a whole lesson pasted in one go.</p>
       <p class="small muted" style="margin-top:8px;font-family:var(--mono)">${esc(AI.diagnosis())}</p>
     </div></div>`;
   }

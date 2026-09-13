@@ -96,6 +96,24 @@ Defaults follow a typical English school year (six half-terms, mid-term test hal
 each). Set your real dates under **Tests → Test dates** and every countdown, the term spine and
 the Part A/Part B split follow them.
 
+## Two copies, and what differs
+
+The app can run in two places, and they are separate installs:
+
+| | GitHub Pages (`index.html` on a web host) | Claude Artifact |
+| --- | --- | --- |
+| Revision, tests, scheduling, reminders | Yes | Yes |
+| Writes cards from a topic name | **No** — nothing to ask | Yes |
+| Syncs between your devices | No — per browser | Yes |
+| Needs a Claude account to open | No | Yes |
+
+The card writer asks Claude on the viewer's own account, which only the Artifact viewer can do; a static
+host has no way to make that call, and an API key baked into a public page would be readable by anyone
+who visited it. So the Pages copy deliberately does without it and says so on the Cards screen.
+
+**Cards do not move between the two copies** — browser storage is per origin. To migrate:
+**Memory → Export backup** in one, **Memory → Import backup** in the other.
+
 ## Where your data lives
 
 `localStorage` on the device, always. Published as a Claude Artifact it also syncs through the
