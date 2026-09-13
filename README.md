@@ -39,8 +39,17 @@ in a tab, so pin it or add it to your home screen.
 
 ## Getting your own material in
 
-Under **Cards**, pick the subject and half-term, then either add cards one at a time or paste a
-whole lesson's worth:
+**Tell it the topic and it writes the cards.** Under **Cards**, pick the subject and half-term,
+type the topic you covered in the lesson ("Photosynthesis", "Trigonometry", "The Weimar
+Republic"), set your year group, and it writes a set of questions for you. Paste your lesson
+notes into the optional box and it stays inside what your class actually covered. Nothing is
+added until you've read through the batch and unticked anything you weren't taught — and it
+won't repeat questions already in that topic, so "write more" genuinely extends the set.
+
+This runs on the published Artifact version, which can ask Claude on your account. Opened as a
+plain file there's no Claude to ask, so the panel says so and you write cards by hand instead.
+
+You can also add cards one at a time, or paste a whole lesson's worth:
 
 ```
 # Photosynthesis

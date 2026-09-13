@@ -344,6 +344,30 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .step .b{font-size:14px;color:var(--ink-2);line-height:1.55}
 .step .b b{color:var(--ink)}
 
+/* card writer */
+.spinner{
+  width:15px;height:15px;border-radius:50%;flex:none;
+  border:2.5px solid var(--surface-3);border-top-color:var(--accent);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.genlist{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.genrow{
+  display:flex;gap:11px;align-items:flex-start;text-align:left;width:100%;
+  background:var(--surface);border:0;padding:11px 13px;font:inherit;
+}
+.genrow:hover{background:var(--accent-soft)}
+.genrow .tick{
+  width:19px;height:19px;border-radius:5px;flex:none;margin-top:1px;
+  border:1.5px solid var(--accent);background:var(--accent);color:var(--on-accent);
+  display:grid;place-items:center;font-size:12px;line-height:1;
+}
+.genrow.off{opacity:.5}
+.genrow.off .tick{background:transparent;border-color:var(--line-2)}
+.gtxt{min-width:0;display:flex;flex-direction:column;gap:2px}
+.gq{font-weight:600;font-size:14.5px}
+.ga{font-size:13.5px;color:var(--ink-2)}
+
 /* misc */
 .toast{
   position:fixed;left:50%;bottom:80px;transform:translateX(-50%);z-index:90;
@@ -561,6 +585,182 @@ const Store = {
   }
 };
 
+/* ------------------------------------------------------------ card writer */
+/* The page can ask Claude to write questions for a topic. Only available on
+   the published version — standalone, `AI.sample` stays null and the panel
+   falls back to writing cards by hand. */
+const AI = {
+  sample: null,
+  async connect(){
+    try { this.sample = (window.claude && window.claude.use) ? await window.claude.use("sample") : null; }
+    catch(e){ this.sample = null; }
+    return this.sample;
+  }
+};
+
+const gen = {status:"idle", items:[], msg:"", written:0, ctl:null, topic:"", notes:"", count:12};
+
+function genPrompt(subject, topic, level, notes, count, avoid){
+  return [
+    `You are writing revision flashcards for a school student to test themselves with.`,
+    ``,
+    `Subject: ${subject}`,
+    `Topic: ${topic}`,
+    level ? `Level: ${level} (British curriculum)` : `Level: secondary school (British curriculum)`,
+    notes ? `\nWhat the lesson actually covered — treat this as the source of truth and stay inside it:\n${notes}` : "",
+    avoid.length ? `\nAlready in the deck, so do not repeat these or anything close to them:\n${avoid.map(q => "- " + q).join("\n")}` : "",
+    ``,
+    `Write ${count} flashcards testing recall of this topic at this level.`,
+    `Rules:`,
+    `- One fact, definition, rule or worked step per card — never two.`,
+    `- The question must be answerable from memory in under 15 seconds.`,
+    `- Keep answers short: under 12 words where you can, and never a paragraph.`,
+    `- Use the subject's real vocabulary, units and notation.`,
+    `- Mix it up: definitions, key facts, "what happens if", and short worked examples with real numbers.`,
+    `- British spelling and conventions.`,
+    `- No duplicates and no near-duplicates of each other.`,
+    ``,
+    `Reply with only a JSON array of {"q": string, "a": string} objects.`,
+    `Example: [{"q":"Which organelle releases energy in respiration?","a":"The mitochondria"}]`
+  ].filter(x => x !== "").join("\n");
+}
+
+const GEN_ERRORS = {
+  not_granted: "You didn't allow this page to use Claude, so card writing is off for now. Reload the page to be asked again.",
+  sampling_disabled: "Claude isn't available on this account, so you'll need to write these cards yourself.",
+  rate_limited: "That's a lot of questions at once — wait a minute and try again.",
+  session_expired: "You've been signed out of Claude. Sign back in and try again.",
+  refused: "Claude wouldn't write those. Try describing the topic differently.",
+  empty_completion: "Nothing came back. Try a more specific topic.",
+  invalid_json: "The answer came back in a shape the app couldn't read. Try again, or ask for fewer cards.",
+  prompt_too_large: "Those notes are too long — paste a shorter chunk and generate in a couple of goes.",
+  cancelled: "Stopped."
+};
+
+async function generateCards(more=false){
+  const sel = viewCards.sel;
+  const subject = subjectOf(sel.subjectId);
+  if (!subject) return toast("Pick a subject first.");
+  /* The form is gone once a batch is on screen, so "write more" reuses what was typed. */
+  const val = (id, fallback) => { const el = $(id); return el ? el.value : fallback; };
+  gen.topic = String(val("#genTopic", gen.topic)).trim();
+  gen.notes = String(val("#genNotes", gen.notes)).trim();
+  gen.count = clamp(Number(val("#genCount", gen.count)) || 12, 4, 30);
+  gen.part = val("#genPart", gen.part || "A");
+  const level = String(val("#genLevel", S.settings.level || "")).trim();
+  if (level !== S.settings.level){ S.settings.level = level; save("meta"); }
+  if (!gen.topic) return toast("Type the topic you're revising.");
+
+  const existing = S.cards
+    .filter(c => c.subjectId === subject.id && norm(c.topic) === norm(gen.topic))
+    .map(c => c.q);
+  const avoid = existing.concat(more ? gen.items.map(i => i.q) : []).slice(-45);
+
+  const kept = more ? gen.items : [];
+  gen.status = "thinking"; gen.items = kept; gen.msg = ""; gen.written = 0;
+  gen.ctl = new AbortController();
+  renderGen();
+
+  try {
+    const items = await AI.sample.json(
+      genPrompt(subject.name, gen.topic, level, gen.notes, gen.count, avoid),
+      {
+        signal: gen.ctl.signal,
+        cache: false,
+        onText: ({text}) => {
+          /* Only redraw when another question has landed, so the spinner
+             doesn't restart several times a second. */
+          const n = (text.match(/"q"\s*:/g) || []).length;
+          if (gen.status === "writing" && n === gen.written) return;
+          gen.status = "writing"; gen.written = n;
+          renderGen();
+        }
+      }
+    );
+    const seen = new Set(kept.map(i => norm(i.q)).concat(existing.map(norm)));
+    const clean = (Array.isArray(items) ? items : [])
+      .map(o => ({q: String((o && o.q) || "").trim(), a: String((o && o.a) || "").trim(), keep: true}))
+      .filter(o => {
+        if (!o.q || !o.a || seen.has(norm(o.q))) return false;
+        seen.add(norm(o.q)); return true;
+      });
+    if (!clean.length && !kept.length){ gen.status = "error"; gen.msg = GEN_ERRORS.empty_completion; }
+    else { gen.status = "ready"; gen.items = kept.concat(clean); }
+  } catch(e){
+    const code = (e && e.code) || "upstream_error";
+    if (code === "cancelled"){ gen.status = kept.length ? "ready" : "idle"; gen.msg = ""; }
+    else if (kept.length){ gen.status = "ready"; toast(GEN_ERRORS[code] || "Couldn't reach Claude just then."); }
+    else { gen.status = "error"; gen.msg = GEN_ERRORS[code] || "Something went wrong reaching Claude. Try again in a moment."; }
+  }
+  gen.ctl = null;
+  renderGen();
+}
+
+function renderGen(){
+  const host = $("#genPanel");
+  if (host) host.innerHTML = genPanelHTML();
+}
+
+function genPanelHTML(){
+  if (!AI.sample){
+    return `<p class="small muted">Card writing runs on the published version of this app, where it can ask Claude.
+      On this copy, write your cards in the box below — or paste a whole list at once.</p>`;
+  }
+  if (gen.status === "thinking" || gen.status === "writing"){
+    return `<div class="stack">
+      <div class="row"><span class="spinner" aria-hidden="true"></span>
+        <b>${gen.status === "thinking" ? "Claude is reading the topic…" : `Writing your questions — ${gen.written} so far…`}</b></div>
+      <p class="small muted">This takes up to a minute. It reads the topic and your notes, then writes one question per idea.</p>
+      <button class="btn sm" data-act="gen-stop">Stop</button>
+    </div>`;
+  }
+  if (gen.status === "ready"){
+    const keep = gen.items.filter(i => i.keep).length;
+    return `<div class="stack">
+      <div class="spread">
+        <b>${gen.items.length} questions on ${esc(gen.topic)}</b>
+        <span class="small muted">untick anything you haven't been taught</span>
+      </div>
+      <div class="genlist">
+        ${gen.items.map((it,i) => `
+          <button class="genrow${it.keep?"":" off"}" data-act="gen-toggle" data-i="${i}" aria-pressed="${it.keep}">
+            <span class="tick" aria-hidden="true">${it.keep?"✓":""}</span>
+            <span class="gtxt"><span class="gq">${esc(it.q)}</span><span class="ga">${esc(it.a)}</span></span>
+          </button>`).join("")}
+      </div>
+      <div class="row">
+        <button class="btn primary" data-act="gen-add"${keep?"":" disabled"}>Add ${keep} card${keep===1?"":"s"}</button>
+        <button class="btn" data-act="gen-run" data-more="1">Write ${gen.count} more</button>
+        <button class="btn ghost" data-act="gen-discard">Discard</button>
+      </div>
+    </div>`;
+  }
+  const level = esc(S.settings.level || "");
+  const t = termOf(viewCards.sel.termId) || currentTerm();
+  return `<div class="stack">
+    ${gen.status === "error" ? `<div class="verdict no" style="font-weight:500">${esc(gen.msg)}</div>` : ""}
+    <label class="field">What topic are you doing?
+      <input type="text" id="genTopic" placeholder="e.g. Photosynthesis, Trigonometry, The Weimar Republic" value="${esc(gen.topic)}"></label>
+    <div class="grid3">
+      <label class="field">Your year / level
+        <input type="text" id="genLevel" placeholder="e.g. Year 9" value="${level}"></label>
+      <label class="field">How many
+        <select id="genCount">${[8,12,16,20,25].map(n=>`<option value="${n}"${n===gen.count?" selected":""}>${n} cards</option>`).join("")}</select></label>
+      <label class="field">Which half
+        <select id="genPart">
+          <option value="A"${currentPart(t)==="A"?" selected":""}>Part A — before the mid test</option>
+          <option value="B"${currentPart(t)==="B"?" selected":""}>Part B — after the mid test</option>
+        </select></label>
+    </div>
+    <label class="field">What you covered in the lesson <span class="muted" style="font-weight:400">— optional, but it makes the questions match your class</span>
+      <textarea id="genNotes" rows="4" placeholder="Paste your notes, or just list what the lesson covered: light-dependent reaction, chlorophyll, the word equation, limiting factors…">${esc(gen.notes)}</textarea></label>
+    <div class="row">
+      <button class="btn primary" data-act="gen-run">Write my cards</button>
+      <span class="small muted">Uses your Claude account. Check them before you add them.</span>
+    </div>
+  </div>`;
+}
+
 /* ------------------------------------------------------ default state */
 function academicYearStart(now = new Date()){
   const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear()-1;
@@ -645,7 +845,7 @@ function freshState(){
   });
   return {
     version: 1,
-    settings: {dailyGoal: 25, reminderTime: "17:30", notify: false, lastNudge: 0, theme: "auto"},
+    settings: {dailyGoal: 25, reminderTime: "17:30", notify: false, lastNudge: 0, theme: "auto", level: ""},
     subjects, terms, cards,
     days: {},            // "YYYY-MM-DD" -> {reviewed, correct}
     results: [],         // test results
@@ -899,6 +1099,7 @@ function subjectRow(sub, t){
         <span class="num">${r===null?"—":Math.round(r*100)+"%"}</span></div>
       <div class="bar ${r===null?"":strengthClass(r)}"><span style="width:${r===null?0:Math.round(r*100)}%"></span></div>
     </div>
+    <button class="btn sm" data-act="topic-for" data-id="${sub.id}" title="Write cards for a topic in ${esc(sub.name)}">+ Topic</button>
     <button class="btn sm" data-act="start-subject" data-id="${sub.id}">Revise</button>
   </div>`;
 }
@@ -1094,8 +1295,16 @@ function viewCards(){
     </div>
   </section>
 
+  <section class="card pad" style="border-color:var(--accent);box-shadow:var(--shadow-2)">
+    <div class="sec-head">
+      <h2>Tell it your topic</h2>
+      <span class="note">${esc((subjectOf(sel.subjectId)||{}).name||"")} · ${esc((termOf(sel.termId)||{}).name||"")}</span>
+    </div>
+    <div id="genPanel">${genPanelHTML()}</div>
+  </section>
+
   <section class="card pad">
-    <div class="sec-head"><h2>Add from today's lesson</h2></div>
+    <div class="sec-head"><h2>Or write them yourself</h2></div>
     <div class="grid2">
       <label class="field">Topic
         <input type="text" id="adTopic" placeholder="e.g. Photosynthesis" value="${esc(viewCards.lastTopic||"")}"></label>
@@ -1147,7 +1356,7 @@ Word equation for aerobic respiration | glucose + oxygen → carbon dioxide + wa
           </div>`;
         }).join("")}
       </div>`;
-    }).join("")}</div>` : `<div class="empty">Nothing here yet. Add what you covered in class today — even five cards a lesson adds up fast.</div>`}
+    }).join("")}</div>` : `<div class="empty">Nothing here yet. Type the topic you covered in class today into the box above and it'll write you a set — even five cards a lesson adds up fast.</div>`}
   </section>`;
 }
 
@@ -1645,6 +1854,33 @@ const ACTIONS = {
     endSession();
   },
 
+  /* --- the card writer --- */
+  "topic-for": el => {
+    viewCards.sel = {subjectId: el.dataset.id, termId: currentTerm().id};
+    gen.status = "idle"; gen.items = []; gen.topic = ""; gen.notes = "";
+    go("cards");
+  },
+  "gen-run": el => generateCards(el.dataset.more === "1"),
+  "gen-stop": () => { if (gen.ctl) gen.ctl.abort(); },
+  "gen-toggle": el => {
+    const it = gen.items[Number(el.dataset.i)];
+    if (it){ it.keep = !it.keep; renderGen(); }
+  },
+  "gen-discard": () => { gen.status = "idle"; gen.items = []; gen.msg = ""; renderGen(); },
+  "gen-add": () => {
+    const keep = gen.items.filter(i => i.keep);
+    if (!keep.length) return;
+    const sel = viewCards.sel;
+    keep.forEach(i => S.cards.push(newCard({
+      subjectId: sel.subjectId, termId: sel.termId, part: gen.part || "A",
+      topic: gen.topic, q: i.q, a: i.a
+    })));
+    save("meta", "deck:" + sel.subjectId);
+    gen.status = "idle"; gen.items = []; gen.notes = "";
+    toast(`${keep.length} cards added to ${gen.topic}.`);
+    render();
+  },
+
   /* --- cards management --- */
   "toggle-bulk": () => { const b = $("#bulkBox"); b.hidden = !b.hidden; if (!b.hidden) $("#adBulk").focus(); },
   "add-card": () => {
@@ -1901,7 +2137,7 @@ async function boot(){
   render();
   if (!local) Store.writeLocal(S);
 
-  const db = await Store.connect();
+  const [db] = await Promise.all([Store.connect(), AI.connect()]);
   if (db){
     const remote = await Store.pull();
     if (remote && (!local || (remote.updatedAt||0) > (local.updatedAt||0))){
@@ -1909,8 +2145,8 @@ async function boot(){
     } else {
       await Store.pushAll(S);
     }
-    render();
   }
+  render();   // the card writer only appears once we know whether it's available
 
   nudgeCheck();
   setInterval(() => { if (!session){ renderTopbar(); nudgeCheck(); } }, 60000);
