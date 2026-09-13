@@ -74,8 +74,21 @@ Word equation for aerobic respiration | glucose + oxygen → carbon dioxide + wa
 
 Lines starting with `#` set the topic. `|`, `::` and ` — ` all work as the separator.
 
-The app ships with example cards across four subjects so nothing is empty on first run — there's
-a **Clear example cards** button on the home screen when you're ready to replace them.
+## Subjects
+
+The subject list is fixed to the nine you actually take, in this order:
+
+> Biology · Chemistry · Physics · Literature · English language · Maths · Spanish · Sport science · History
+
+They're created on first run and kept in step on every load, so nothing has to be set up. Six of
+them start with a few example cards to show how it works — there's a **Clear example cards**
+button on the home screen when you're ready to replace them, and the subjects themselves stay
+put. Subjects with no cards yet sit on a single line at the bottom of the home screen rather
+than taking up a block each.
+
+`SUBJECTS` near the top of the script is the list; edit it to change them. You can still add one
+from the Cards screen, and a subject you delete stays deleted rather than reappearing on the
+next load.
 
 ## Test dates
 

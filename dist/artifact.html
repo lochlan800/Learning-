@@ -234,6 +234,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .subjblock:last-child{border-bottom:0}
 .subjhead{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--surface-2);flex-wrap:wrap}
 .topicrow{display:flex;align-items:center;gap:13px;padding:11px 16px 11px 30px;border-top:1px solid var(--line);flex-wrap:wrap}
+.emptysubs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:13px 16px;border-top:1px solid var(--line)}
 .topic-name{font-weight:600;font-size:14.5px;flex:1 1 130px;min-width:0}
 .subj-dot{width:10px;height:10px;border-radius:3px;flex:none}
 .subj-name{font-weight:600;font-size:15px;flex:1 1 130px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -426,7 +427,7 @@ const NAV = [
   {id:"cards",  label:"Cards",   ic:"▤"},
   {id:"memory", label:"Memory",  ic:"◠"},
 ];
-const SUBJECT_COLORS = ["#0B6B6B","#B8651B","#5C4AA8","#1C7A54","#AF3A31","#1F6FA8","#8A5A12","#A03A78"];
+const SUBJECT_COLORS = ["#0B6B6B","#B8651B","#5C4AA8","#1C7A54","#AF3A31","#1F6FA8","#8A5A12","#A03A78","#4B5563"];
 
 /* ---------------------------------------------------------------- utils */
 const $ = (sel, root=document) => root.querySelector(sel);
@@ -805,18 +806,14 @@ function defaultTerms(){
   });
 }
 
+/* Your subjects, in the order you gave them. Everything else is a topic
+   inside one of these. */
+const SUBJECTS = [
+  "Biology", "Chemistry", "Physics", "Literature", "English language",
+  "Maths", "Spanish", "Sport science", "History"
+];
+
 const SEED = [
-  ["Maths","Algebra: expanding & factorising","A",[
-    ["Expand 3(x + 5)","3x + 15"],
-    ["Expand (x + 2)(x + 7)","x² + 9x + 14"],
-    ["Factorise 6x + 9","3(2x + 3)"],
-    ["Factorise x² + 5x + 6","(x + 2)(x + 3)"],
-  ]],
-  ["Maths","Solving equations","B",[
-    ["Solve 4x − 7 = 21","x = 7"],
-    ["Solve 2(x + 3) = 18","x = 6"],
-    ["What do you do to both sides of an equation?","The same thing — whatever keeps it balanced"],
-  ]],
   ["Biology","Cells","A",[
     ["Which organelle releases energy in respiration?","The mitochondria"],
     ["Name one part a plant cell has that an animal cell does not","Cell wall (also chloroplasts and a permanent vacuole)"],
@@ -828,15 +825,37 @@ const SEED = [
     ["Which enzyme breaks down starch?","Amylase"],
     ["What is the 'lock and key' model describing?","How only a substrate with the right shape fits an enzyme's active site"],
   ]],
+  ["Chemistry","Atomic structure","A",[
+    ["What is the relative charge of a neutron?","Zero — it's neutral"],
+    ["What does the atomic number tell you?","The number of protons"],
+    ["Where is almost all the mass of an atom?","In the nucleus"],
+    ["How many electrons fit in the first shell?","Two"],
+  ]],
+  ["Physics","Energy stores and transfers","A",[
+    ["Name the energy store of a stretched spring","Elastic potential"],
+    ["Which equation gives kinetic energy?","Ek = ½mv²"],
+    ["What does the law of conservation of energy state?","Energy cannot be created or destroyed, only transferred"],
+  ]],
+  ["Maths","Algebra: expanding & factorising","A",[
+    ["Expand 3(x + 5)","3x + 15"],
+    ["Expand (x + 2)(x + 7)","x² + 9x + 14"],
+    ["Factorise 6x + 9","3(2x + 3)"],
+    ["Factorise x² + 5x + 6","(x + 2)(x + 3)"],
+  ]],
+  ["Maths","Solving equations","B",[
+    ["Solve 4x − 7 = 21","x = 7"],
+    ["Solve 2(x + 3) = 18","x = 6"],
+    ["What do you do to both sides of an equation?","The same thing — whatever keeps it balanced"],
+  ]],
+  ["Spanish","Describing people","A",[
+    ["How do you say 'I have brown hair' in Spanish?","Tengo el pelo castaño"],
+    ["What does 'es hablador' mean?","He is chatty / talkative"],
+    ["How do you say 'my sister is younger than me'?","Mi hermana es menor que yo"],
+  ]],
   ["History","Causes of WWI","A",[
     ["What does M.A.I.N. stand for?","Militarism, Alliances, Imperialism, Nationalism"],
     ["Who was assassinated in Sarajevo in 1914?","Archduke Franz Ferdinand"],
     ["Which two alliance blocs faced each other in 1914?","The Triple Entente and the Triple Alliance"],
-  ]],
-  ["French","Describing people","A",[
-    ["How do you say 'I have brown hair' in French?","J'ai les cheveux bruns"],
-    ["What does 'il est bavard' mean?","He is chatty / talkative"],
-    ["How do you say 'my sister is younger than me'?","Ma sœur est plus jeune que moi"],
   ]],
 ];
 
@@ -854,20 +873,45 @@ function freshState(){
   const terms = defaultTerms();
   const now = Date.now();
   const current = terms.find(t => now >= parseDate(t.start) && now <= parseDate(t.end)) || terms[0];
-  const subjects = [], cards = [];
+  const subjects = SUBJECTS.map((name,i) => ({id: uid("s_"), name, colorIdx: i % SUBJECT_COLORS.length}));
+  const cards = [];
   SEED.forEach(([subName, topic, part, qs]) => {
-    let sub = subjects.find(s => s.name === subName);
-    if (!sub){ sub = {id: uid("s_"), name: subName, colorIdx: subjects.length % SUBJECT_COLORS.length}; subjects.push(sub); }
+    const sub = subjects.find(s => s.name === subName);
+    if (!sub) return;
     qs.forEach(([q,a]) => cards.push(newCard({subjectId:sub.id, termId:current.id, part, topic, q, a, example:true})));
   });
   return {
     version: 1,
-    settings: {dailyGoal: 25, reminderTime: "17:30", notify: false, lastNudge: 0, theme: "auto", level: ""},
+    settings: {dailyGoal: 25, reminderTime: "17:30", notify: false, lastNudge: 0, theme: "auto", level: "", dropped: []},
     subjects, terms, cards,
     days: {},            // "YYYY-MM-DD" -> {reviewed, correct}
     results: [],         // test results
     updatedAt: now
   };
+}
+
+/* Keep the subject list in step with SUBJECTS on every load: add any that
+   are missing, and clear out an old seeded subject that never held anything
+   but example cards. A subject you deleted on purpose stays deleted, and a
+   subject you added yourself is never touched. */
+function ensureSubjects(s){
+  const listed = name => SUBJECTS.some(n => norm(n) === norm(name));
+  const dropped = s.settings.dropped || [];
+  SUBJECTS.forEach((name,i) => {
+    if (dropped.some(d => norm(d) === norm(name))) return;
+    if (!s.subjects.some(x => norm(x.name) === norm(name)))
+      s.subjects.push({id: uid("s_"), name, colorIdx: i % SUBJECT_COLORS.length});
+  });
+  s.subjects = s.subjects.filter(sub =>
+    listed(sub.name) || s.cards.some(c => c.subjectId === sub.id && !c.example));
+  const live = new Set(s.subjects.map(x => x.id));
+  s.cards = s.cards.filter(c => live.has(c.subjectId));
+  const order = SUBJECTS.map(norm);
+  s.subjects.sort((a,b) => {
+    const ia = order.indexOf(norm(a.name)), ib = order.indexOf(norm(b.name));
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  return s;
 }
 
 /* ---------------------------------------------------------- app state */
@@ -1011,6 +1055,11 @@ function viewToday(){
   const termCards = cardsFor({termId: t.id});
   const ready = readiness(termCards);
 
+  /* Subjects you've started this half-term get a full breakdown; the rest
+     sit on one line so the page stays scannable. */
+  const started = S.subjects.filter(s => cardsFor({termId:t.id, subjectId:s.id}).length);
+  const untouched = S.subjects.filter(s => !cardsFor({termId:t.id, subjectId:s.id}).length);
+
   const mid = parseDate(t.midTest), end = parseDate(t.endTest);
   const nextTest = Date.now() <= mid ? {kind:"mid", ts:mid, label:"Mid-half-term test"} : {kind:"end", ts:end, label:"End-of-half-term test"};
   const cd = fmtCountdown(nextTest.ts);
@@ -1069,8 +1118,12 @@ function viewToday(){
     <div class="pad" style="padding-bottom:4px">
       <div class="sec-head"><h2>Topics this half-term</h2><span class="note">weakest first</span></div>
     </div>
-    ${S.subjects.length ? S.subjects.map(sub => subjectBlock(sub, t)).join("")
-      : `<div class="pad"><div class="empty">No subjects yet.<a class="btn" href="#/cards">Add your first cards</a></div></div>`}
+    ${started.length ? started.map(sub => subjectBlock(sub, t)).join("")
+      : `<div class="pad"><div class="empty">Nothing in this half-term yet. Pick a subject below and tell it the topic you're on.</div></div>`}
+    ${untouched.length ? `<div class="emptysubs">
+      <span class="small muted">Nothing yet this half-term —</span>
+      ${untouched.map(s => `<button class="btn sm" data-act="topic-for" data-id="${s.id}">+ ${esc(s.name)}</button>`).join("")}
+    </div>` : ""}
   </section>
 
   <section class="card pad">
@@ -2044,6 +2097,8 @@ const ACTIONS = {
     if (!confirm(`Delete ${sub.name} and its ${n} cards? This can't be undone.`)) return;
     S.cards = S.cards.filter(c => c.subjectId !== sub.id);
     S.subjects = S.subjects.filter(s => s.id !== sub.id);
+    /* Remember it so the standard list doesn't put it back on the next load. */
+    S.settings.dropped = (S.settings.dropped || []).concat(sub.name);
     viewCards.sel.subjectId = S.subjects[0] ? S.subjects[0].id : "";
     if (Store.db) Store.db.collection("decks").doc(sub.id).delete().catch(()=>{});
     save("meta"); render();
@@ -2051,8 +2106,7 @@ const ACTIONS = {
   "clear-examples": () => {
     if (!confirm("Remove the example cards?")) return;
     const subs = new Set(S.cards.filter(c => c.example).map(c => c.subjectId));
-    S.cards = S.cards.filter(c => !c.example);
-    S.subjects = S.subjects.filter(s => S.cards.some(c => c.subjectId === s.id) || !subs.has(s.id));
+    S.cards = S.cards.filter(c => !c.example);   // the subjects themselves stay
     save("meta", ...[...subs].map(id => "deck:"+id));
     toast("Examples cleared — the app is yours now."); render();
   },
@@ -2250,7 +2304,7 @@ function migrate(data){
   s.days = data.days || {};
   s.results = data.results || [];
   s.cards = (data.cards||[]).map(c => ({...newCard({subjectId:c.subjectId, termId:c.termId, q:c.q, a:c.a}), ...c}));
-  return s;
+  return ensureSubjects(s);
 }
 
 async function boot(){
@@ -2259,7 +2313,7 @@ async function boot(){
   applyTheme();
   route = readRoute();
   render();
-  if (!local) Store.writeLocal(S);
+  Store.writeLocal(S);   // persist whatever migrate() just changed, not only a fresh install
 
   const [db] = await Promise.all([Store.connect(), AI.connect()]);
   if (db){
