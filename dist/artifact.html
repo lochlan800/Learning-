@@ -418,7 +418,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
    through the artifact `db` capability when the page is published.
    ===================================================================== */
 
-const BUILD = 8;          // bump on every publish — shown on the Memory tab
+const BUILD = 9;          // bump on every publish — shown on the Memory tab
 const DAY = 86400000;
 const MIN = 60000;
 const NAV = [
@@ -599,14 +599,16 @@ const AI = {
   resolved: false,        // false until we know whether the writer is available
   states: null,           // what the viewer says this page is allowed, when it isn't
   async connect(){
-    const use = (window.claude && window.claude.use) ? window.claude.use : null;
-    try { this.sample = use ? await use("sample") : null; }
+    /* Call through window.claude so `use` keeps its receiver — a detached
+       reference is not the same function. */
+    const has = !!(window.claude && window.claude.use);
+    try { this.sample = has ? await window.claude.use("sample") : null; }
     catch(e){ this.sample = null; }
-    if (!this.sample && use){
+    if (!this.sample && has){
       /* Ask what this view actually offers, so the page can say why rather
          than shrugging. state() reads without prompting anyone. */
       try {
-        const perms = await use("permissions");
+        const perms = await window.claude.use("permissions");
         this.states = perms ? await perms.state() : null;
       } catch(e){ this.states = null; }
     }
@@ -614,11 +616,12 @@ const AI = {
     return this.sample;
   },
   diagnosis(){
-    if (!window.claude) return "opened as a plain web page, outside Claude";
-    if (!this.states) return "this view offers the page no capabilities";
-    const keys = Object.keys(this.states);
-    if (!keys.length) return "this view offers the page no capabilities";
-    return keys.map(k => `${k}: ${this.states[k]}`).join(" · ");
+    const where = " · served from " + location.hostname + (location.protocol === "file:" ? " (local file)" : "");
+    if (!window.claude) return "no Claude runtime on this page" + where;
+    if (!window.claude.use) return "Claude runtime present but no capabilities" + where;
+    const keys = this.states ? Object.keys(this.states) : [];
+    if (!keys.length) return "runtime present, nothing granted to this page" + where;
+    return keys.map(k => `${k}: ${this.states[k]}`).join(" · ") + where;
   }
 };
 
