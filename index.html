@@ -1,0 +1,1900 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ARTIFACT:HEAD -->
+<title>Half-Term Recall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* ---------- tokens ---------- */
+:root{
+  color-scheme: light;
+  --paper:#EFF3F2; --surface:#FFFFFF; --surface-2:#E6EDEB; --surface-3:#DCE6E4;
+  --ink:#0D1A1B; --ink-2:#3C4F50; --ink-3:#6B807F;
+  --line:#D2DEDC; --line-2:#BECECB;
+  --accent:#0B6B6B; --accent-2:#085252; --accent-soft:#D7ECEA; --on-accent:#FFFFFF;
+  --mark:#F0BE28; --mark-soft:#FBEEC2;
+  --strong:#1C7A54; --fading:#A9700F; --weak:#AF3A31;
+  --strong-soft:#D8EEE2; --fading-soft:#F8E8C9; --weak-soft:#F6DEDB;
+  --shadow-1:0 1px 2px rgba(13,26,27,.06);
+  --shadow-2:0 2px 4px rgba(13,26,27,.05), 0 14px 34px -18px rgba(13,26,27,.45);
+  --r-s:6px; --r-m:10px; --r-l:16px;
+  --sans:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display:"Bricolage Grotesque", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:#080F10; --surface:#111C1D; --surface-2:#172426; --surface-3:#1E2E30;
+    --ink:#E6EEEC; --ink-2:#AEC2C0; --ink-3:#7C9391;
+    --line:#223234; --line-2:#2E4143;
+    --accent:#3EB3AA; --accent-2:#6AD2C8; --accent-soft:#0F2E2D; --on-accent:#04191A;
+    --mark:#EFC552; --mark-soft:#3A2F0E;
+    --strong:#4EC08C; --fading:#DFA33D; --weak:#E2695F;
+    --strong-soft:#102C22; --fading-soft:#2F2410; --weak-soft:#2F1714;
+    --shadow-1:0 1px 2px rgba(0,0,0,.4);
+    --shadow-2:0 2px 4px rgba(0,0,0,.3), 0 14px 34px -18px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#080F10; --surface:#111C1D; --surface-2:#172426; --surface-3:#1E2E30;
+  --ink:#E6EEEC; --ink-2:#AEC2C0; --ink-3:#7C9391;
+  --line:#223234; --line-2:#2E4143;
+  --accent:#3EB3AA; --accent-2:#6AD2C8; --accent-soft:#0F2E2D; --on-accent:#04191A;
+  --mark:#EFC552; --mark-soft:#3A2F0E;
+  --strong:#4EC08C; --fading:#DFA33D; --weak:#E2695F;
+  --strong-soft:#102C22; --fading-soft:#2F2410; --weak-soft:#2F1714;
+  --shadow-1:0 1px 2px rgba(0,0,0,.4);
+  --shadow-2:0 2px 4px rgba(0,0,0,.3), 0 14px 34px -18px rgba(0,0,0,.9);
+}
+
+/* ---------- reset ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:16px; line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+img{max-width:100%}
+[hidden]{display:none !important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:3px}
+h1,h2,h3,h4{font-family:var(--display);font-weight:800;margin:0;text-wrap:balance;letter-spacing:-.015em}
+p{margin:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500}
+
+/* ---------- app shell ---------- */
+.shell{min-height:100vh;display:grid;grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding-block:10px; padding-inline:16px;
+  background:var(--surface);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;
+}
+.brand{display:flex;align-items:center;gap:9px;margin-right:auto;min-width:0}
+.brand-mark{
+  width:30px;height:30px;border-radius:9px;flex:none;
+  background:var(--accent);color:var(--on-accent);
+  display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:13px;
+}
+.brand-name{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-sub{font-size:11px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;display:block;line-height:1.2}
+.duepill{
+  display:inline-flex;align-items:center;gap:7px;border-radius:999px;
+  padding:5px 12px 5px 9px;border:1px solid var(--line-2);background:var(--surface-2);
+  font-size:13px;font-weight:500;white-space:nowrap;
+}
+.duepill.hot{background:var(--mark-soft);border-color:var(--mark)}
+.duepill .dot{width:8px;height:8px;border-radius:50%;background:var(--ink-3);flex:none}
+.duepill.hot .dot{background:var(--mark);box-shadow:0 0 0 0 rgba(240,190,40,.7);animation:pulse 2.4s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(240,190,40,0)}100%{box-shadow:0 0 0 0 rgba(240,190,40,0)}}
+.iconbtn{
+  width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+  background:var(--surface);display:grid;place-items:center;font-size:15px;flex:none;
+}
+.iconbtn:hover{background:var(--surface-2)}
+
+.body{display:grid;grid-template-columns:1fr;min-width:0}
+.rail{display:none}
+main{padding-inline:16px;padding-block:20px 96px;min-width:0}
+.wrap{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+
+.tabbar{
+  position:fixed;bottom:0;left:0;right:0;z-index:20;
+  display:grid;grid-template-columns:repeat(5,1fr);
+  background:var(--surface);border-top:1px solid var(--line);
+  padding-block:6px 8px;padding-inline:4px;
+}
+.tabbar a{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  text-decoration:none;color:var(--ink-3);font-size:10.5px;font-weight:500;
+  letter-spacing:.02em;padding:4px 2px;border-radius:8px;
+}
+.tabbar a .ic{font-size:17px;line-height:1}
+.tabbar a[aria-current="page"]{color:var(--accent)}
+
+@media (min-width:900px){
+  .body{grid-template-columns:212px 1fr}
+  .rail{
+    display:flex;flex-direction:column;gap:2px;
+    padding:18px 12px;border-right:1px solid var(--line);background:var(--surface);
+    position:sticky;top:51px;align-self:start;height:calc(100vh - 51px);
+  }
+  .rail a{
+    display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink-2);
+    padding:9px 11px;border-radius:9px;font-size:14.5px;font-weight:500;
+  }
+  .rail a .ic{font-size:16px;width:20px;text-align:center}
+  .rail a:hover{background:var(--surface-2);color:var(--ink)}
+  .rail a[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .rail-foot{margin-top:auto;font-size:11.5px;color:var(--ink-3);line-height:1.45;padding:11px}
+  .tabbar{display:none}
+  main{padding-block:28px 60px;padding-inline:28px}
+}
+
+/* ---------- generic pieces ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);box-shadow:var(--shadow-1)}
+.pad{padding:18px}
+.sec-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.sec-head h2{font-size:19px}
+.sec-head .note{font-size:13px;color:var(--ink-3);margin-left:auto}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;font-family:var(--sans)}
+.muted{color:var(--ink-3)}
+.small{font-size:13px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:12px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:var(--r-m);border:1px solid var(--line-2);background:var(--surface);
+  color:var(--ink);padding:10px 15px;font-size:14.5px;font-weight:600;
+  text-decoration:none;transition:background .12s ease, border-color .12s ease, transform .06s ease;
+}
+.btn:hover{background:var(--surface-2)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--accent)}
+.btn.ghost:hover{background:var(--accent-soft)}
+.btn.wide{width:100%}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:8px}
+.btn.danger{color:var(--weak);border-color:var(--line-2)}
+.btn.danger:hover{background:var(--weak-soft)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+
+.chip{
+  display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+  padding:3px 10px;font-size:12px;font-weight:600;
+  background:var(--surface-2);color:var(--ink-2);border:1px solid transparent;white-space:nowrap;
+}
+.chip.a{background:var(--accent-soft);color:var(--accent)}
+.chip.b{background:var(--mark-soft);color:var(--fading)}
+.chip.strong{background:var(--strong-soft);color:var(--strong)}
+.chip.fading{background:var(--fading-soft);color:var(--fading)}
+.chip.weak{background:var(--weak-soft);color:var(--weak)}
+.chip.outline{background:transparent;border-color:var(--line-2);color:var(--ink-3);font-weight:500}
+
+label.field{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:var(--ink-2);min-width:0}
+input[type=text],input[type=date],input[type=time],input[type=number],select,textarea{
+  width:100%;padding:9px 11px;border-radius:var(--r-m);border:1px solid var(--line-2);
+  background:var(--surface);font-size:15px;font-weight:400;
+}
+textarea{resize:vertical;line-height:1.55;font-family:var(--sans)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+
+.bar{height:7px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.bar > span{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .4s ease}
+.bar.strong > span{background:var(--strong)} .bar.fading > span{background:var(--fading)} .bar.weak > span{background:var(--weak)}
+
+.empty{
+  border:1.5px dashed var(--line-2);border-radius:var(--r-l);padding:26px 18px;text-align:center;
+  color:var(--ink-3);font-size:14px;display:flex;flex-direction:column;gap:12px;align-items:center;
+}
+
+/* ---------- today ---------- */
+.hero{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);
+  box-shadow:var(--shadow-2);overflow:hidden;
+}
+.hero-main{padding:22px 20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.hero-figure{flex:none;width:104px;height:104px;position:relative;display:grid;place-items:center}
+.hero-figure svg{position:absolute;inset:0;width:100%;height:100%}
+.hero-figure .val{font-family:var(--mono);font-weight:600;font-size:30px;line-height:1}
+.hero-figure .lab{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:2px}
+.hero-copy{flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.hero-copy h1{font-size:clamp(22px,4.4vw,29px);line-height:1.12}
+.hero-strip{display:flex;gap:0;border-top:1px solid var(--line);background:var(--surface-2)}
+.hero-strip div{flex:1;padding:11px 14px;border-right:1px solid var(--line);min-width:0}
+.hero-strip div:last-child{border-right:0}
+.hero-strip .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.hero-strip .v{font-family:var(--mono);font-weight:600;font-size:17px;margin-top:1px}
+
+/* term spine */
+.spine{position:relative;padding:26px 4px 6px}
+.spine-track{height:10px;border-radius:99px;background:var(--surface-3);position:relative;overflow:visible}
+.spine-fill{position:absolute;inset:0 auto 0 0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.spine-mark{position:absolute;top:-4px;width:3px;height:18px;border-radius:2px;background:var(--ink);transform:translateX(-50%)}
+.spine-mark.mid{background:var(--mark)}
+.spine-mark.end{background:var(--weak)}
+.spine-now{position:absolute;top:-11px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px}
+.spine-now .pin{width:13px;height:13px;border-radius:50%;background:var(--surface);border:3px solid var(--accent)}
+.spine-labels{display:flex;justify-content:space-between;margin-top:9px;font-size:11.5px;color:var(--ink-3)}
+.halves{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.half{border:1px solid var(--line);border-radius:var(--r-m);padding:12px;background:var(--surface-2)}
+.half h4{font-size:13.5px;font-family:var(--sans);font-weight:700}
+.half .test{font-size:12.5px;color:var(--ink-3);margin-top:4px}
+.half .cnt{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:8px}
+
+/* subject rows */
+.subj{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.subj:last-child{border-bottom:0}
+.subj-dot{width:10px;height:10px;border-radius:3px;flex:none}
+.subj-name{font-weight:600;font-size:15px;flex:1 1 130px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subj-meter{flex:2 1 150px;min-width:100px;display:flex;flex-direction:column;gap:5px}
+.subj-meter .t{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3)}
+
+/* forecast chart */
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{font-family:var(--mono);font-size:9px;fill:var(--ink-3)}
+.chart .axis{stroke:var(--line);stroke-width:1}
+.chart .barfill{fill:var(--accent)}
+.chart .barfill.today{fill:var(--mark)}
+.chart .curve{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
+.chart .curve.decay{stroke:var(--weak);stroke-dasharray:5 4}
+.chart .band{fill:var(--accent-soft);opacity:.55}
+
+/* ---------- session overlay ---------- */
+.session{
+  position:fixed;inset:0;z-index:60;background:var(--paper);
+  display:flex;flex-direction:column;
+}
+.s-top{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;
+  border-bottom:1px solid var(--line);background:var(--surface);
+}
+.s-prog{flex:1;height:7px;border-radius:99px;background:var(--surface-3);overflow:hidden;min-width:60px}
+.s-prog > span{display:block;height:100%;background:var(--accent);transition:width .3s ease}
+.s-count{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.s-body{flex:1;overflow-y:auto;padding:18px 16px 24px;display:flex;justify-content:center}
+.s-inner{width:100%;max-width:620px;display:flex;flex-direction:column;gap:16px;margin-block:auto}
+.q-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);
+  padding:22px 20px;box-shadow:var(--shadow-2);display:flex;flex-direction:column;gap:12px;
+}
+.q-meta{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.q-text{font-family:var(--display);font-weight:600;font-size:clamp(19px,3.6vw,25px);line-height:1.28}
+.a-text{
+  font-size:clamp(17px,3.2vw,21px);line-height:1.42;padding-top:14px;
+  border-top:2px solid var(--accent-soft);color:var(--ink);
+}
+.a-text .lab{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:6px;font-family:var(--sans)}
+.choices{display:flex;flex-direction:column;gap:9px}
+.choice{
+  text-align:left;padding:13px 15px;border-radius:var(--r-m);border:1.5px solid var(--line-2);
+  background:var(--surface);font-size:15.5px;font-weight:500;display:flex;gap:11px;align-items:flex-start;
+}
+.choice .key{font-family:var(--mono);font-size:12px;color:var(--ink-3);padding-top:2px;flex:none}
+.choice:hover:not([disabled]){border-color:var(--accent);background:var(--accent-soft)}
+.choice[disabled]{pointer-events:none;opacity:.65}
+.choice.right{border-color:var(--strong);background:var(--strong-soft);opacity:1}
+.choice.wrong{border-color:var(--weak);background:var(--weak-soft);opacity:1}
+.typerow{display:flex;gap:9px;align-items:stretch}
+.typerow input{flex:1;font-size:16px}
+.verdict{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;padding:10px 13px;border-radius:var(--r-m)}
+.verdict.ok{background:var(--strong-soft);color:var(--strong)}
+.verdict.near{background:var(--fading-soft);color:var(--fading)}
+.verdict.no{background:var(--weak-soft);color:var(--weak)}
+.s-foot{border-top:1px solid var(--line);background:var(--surface);padding:12px 14px calc(12px + env(safe-area-inset-bottom))}
+.s-foot-inner{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:9px}
+.grades{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.grade{
+  border-radius:var(--r-m);border:1.5px solid var(--line-2);background:var(--surface);
+  padding:9px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:13px;font-weight:600;
+}
+.grade small{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);font-weight:500}
+.grade.g0{color:var(--weak)} .grade.g0:hover{background:var(--weak-soft);border-color:var(--weak)}
+.grade.g1{color:var(--fading)} .grade.g1:hover{background:var(--fading-soft);border-color:var(--fading)}
+.grade.g2{color:var(--strong)} .grade.g2:hover{background:var(--strong-soft);border-color:var(--strong)}
+.grade.g3{color:var(--accent)} .grade.g3:hover{background:var(--accent-soft);border-color:var(--accent)}
+.dunno{
+  width:100%;border-radius:var(--r-m);border:1.5px solid var(--weak);background:var(--weak-soft);
+  color:var(--weak);padding:12px;font-size:15px;font-weight:700;
+}
+.dunno:hover{background:var(--weak);color:var(--surface)}
+.kbd-hint{font-size:11px;color:var(--ink-3);text-align:center;font-family:var(--mono)}
+@media (max-width:620px){.kbd-hint{display:none}}
+
+/* results */
+.score-ring{width:132px;height:132px;position:relative;display:grid;place-items:center;flex:none}
+.score-ring svg{position:absolute;inset:0;width:100%;height:100%}
+.score-ring .pct{font-family:var(--mono);font-weight:600;font-size:31px}
+.miss-list{display:flex;flex-direction:column;gap:1px;background:var(--line);border-radius:var(--r-m);overflow:hidden}
+.miss{background:var(--surface);padding:11px 14px;display:flex;gap:12px;align-items:flex-start}
+.miss .qq{font-weight:600;font-size:14px}
+.miss .aa{font-size:13.5px;color:var(--ink-2);margin-top:2px}
+
+/* cards manager */
+.topic-group{border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;background:var(--surface)}
+.topic-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.topic-head h4{font-size:13.5px;font-family:var(--sans);font-weight:700;flex:1;min-width:0}
+.cardrow{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);align-items:flex-start}
+.cardrow:last-child{border-bottom:0}
+.cardrow .txt{flex:1;min-width:0}
+.cardrow .q{font-weight:600;font-size:14.5px;word-wrap:break-word}
+.cardrow .a{font-size:13.5px;color:var(--ink-2);margin-top:2px;word-wrap:break-word}
+.strengthdot{width:34px;flex:none;text-align:right;font-family:var(--mono);font-size:12px;font-weight:600}
+.tbl-scroll{overflow-x:auto}
+
+/* memory page */
+.sci{display:flex;flex-direction:column;gap:14px}
+.sci h3{font-size:16px}
+.sci p{font-size:14.5px;color:var(--ink-2);line-height:1.6;max-width:62ch}
+.sci .pull{border-left:3px solid var(--mark);padding:2px 0 2px 14px;font-size:14.5px;color:var(--ink);font-weight:500}
+.steps{display:flex;flex-direction:column;gap:10px;counter-reset:step}
+.step{display:flex;gap:12px;align-items:flex-start}
+.step .n{
+  flex:none;width:24px;height:24px;border-radius:7px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:600;
+}
+.step .b{font-size:14px;color:var(--ink-2);line-height:1.55}
+.step .b b{color:var(--ink)}
+
+/* misc */
+.toast{
+  position:fixed;left:50%;bottom:80px;transform:translateX(-50%);z-index:90;
+  background:var(--ink);color:var(--paper);padding:10px 17px;border-radius:999px;
+  font-size:14px;font-weight:500;box-shadow:var(--shadow-2);max-width:calc(100vw - 32px);
+}
+@media (min-width:900px){.toast{bottom:28px}}
+.banner{
+  display:flex;gap:12px;align-items:flex-start;padding:13px 15px;border-radius:var(--r-m);
+  background:var(--mark-soft);border:1px solid var(--mark);font-size:14px;line-height:1.5;
+}
+.banner .ic{font-size:17px;line-height:1.3}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+<!-- /ARTIFACT:HEAD -->
+</head>
+<body>
+<!-- ARTIFACT:BODY -->
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">HR</div>
+      <div>
+        <div class="brand-name">Half-Term Recall</div>
+        <span class="brand-sub" id="brandSub">Loading</span>
+      </div>
+    </div>
+    <button class="duepill" id="duePill" type="button"><span class="dot"></span><span id="dueText">—</span></button>
+    <button class="iconbtn" id="themeBtn" type="button" title="Switch light / dark" aria-label="Switch light / dark">◐</button>
+  </header>
+
+  <div class="body">
+    <nav class="rail" id="rail" aria-label="Sections"></nav>
+    <main><div class="wrap" id="view"></div></main>
+  </div>
+
+  <nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
+</div>
+<div id="overlay"></div>
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   Half-Term Recall — revision built around how memory actually decays.
+   Single file, no build step. Works offline from localStorage; syncs
+   through the artifact `db` capability when the page is published.
+   ===================================================================== */
+
+const DAY = 86400000;
+const MIN = 60000;
+const NAV = [
+  {id:"today",  label:"Today",   ic:"◆"},
+  {id:"revise", label:"Revise",  ic:"⟳"},
+  {id:"tests",  label:"Tests",   ic:"✓"},
+  {id:"cards",  label:"Cards",   ic:"▤"},
+  {id:"memory", label:"Memory",  ic:"◠"},
+];
+const SUBJECT_COLORS = ["#0B6B6B","#B8651B","#5C4AA8","#1C7A54","#AF3A31","#1F6FA8","#8A5A12","#A03A78"];
+
+/* ---------------------------------------------------------------- utils */
+const $ = (sel, root=document) => root.querySelector(sel);
+const uid = p => p + Math.random().toString(36).slice(2,9);
+const clamp = (n,a,b) => Math.max(a, Math.min(b,n));
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const todayKey = (d=new Date()) => new Date(d.getTime() - d.getTimezoneOffset()*MIN).toISOString().slice(0,10);
+const dayStart = ts => { const d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); };
+const parseDate = s => { const [y,m,d] = String(s).split("-").map(Number); return new Date(y, m-1, d, 9, 0, 0).getTime(); };
+const fmtDate = ts => new Date(ts).toLocaleDateString(undefined,{day:"numeric",month:"short"});
+const fmtDateLong = ts => new Date(ts).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"long"});
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+function shuffle(a){ const r=a.slice(); for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];} return r; }
+
+function fmtInterval(days){
+  if (days <= 0) return "now";
+  if (days < 1) return Math.round(days*24*60) + "m";
+  if (days < 30) return Math.round(days) + "d";
+  if (days < 365) return (days/30.4).toFixed(days<60?1:0) + "mo";
+  return (days/365).toFixed(1) + "y";
+}
+function fmtCountdown(ts){
+  const d = Math.ceil((dayStart(ts) - dayStart(Date.now()))/DAY);
+  if (d < 0) return {text:`${-d}d ago`, days:d};
+  if (d === 0) return {text:"today", days:0};
+  if (d === 1) return {text:"tomorrow", days:1};
+  return {text:`in ${d} days`, days:d};
+}
+
+function toast(msg){
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  $("#toasts").appendChild(t);
+  setTimeout(()=>{ t.style.opacity="0"; t.style.transition="opacity .3s"; }, 2100);
+  setTimeout(()=> t.remove(), 2500);
+}
+
+/* levenshtein distance for typed-answer marking */
+function lev(a,b){
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=new Array(n+1); for(let j=0;j<=n;j++) prev[j]=j;
+  for(let i=1;i<=m;i++){
+    const cur=[i];
+    for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    prev=cur;
+  }
+  return prev[n];
+}
+const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+  .replace(/[^a-z0-9\s]/g," ").replace(/\b(a|an|the)\b/g," ").replace(/\s+/g," ").trim();
+function markTyped(given, answer){
+  const g = norm(given), a = norm(answer);
+  if (!g) return "no";
+  if (g === a) return "ok";
+  const d = lev(g,a), ratio = 1 - d/Math.max(g.length,a.length);
+  if (ratio >= 0.86) return "ok";
+  if (ratio >= 0.62 || a.includes(g) || g.includes(a)) return "near";
+  return "no";
+}
+
+/* ------------------------------------------------------- memory model */
+/* Retrievability of a memory trace t days after the last successful recall,
+   with stability S (days): R = 0.9 ^ (t / S). At t = S, R = 90% — that is
+   the moment the card becomes due, i.e. the last comfortable moment to
+   rehearse before recall starts falling off a cliff. */
+function stability(card){ return Math.max(card.intervalDays || 0, 0.02); }
+function strength(card, at=Date.now()){
+  if (!card.reps || !card.lastReview) return 0;
+  const t = (at - card.lastReview)/DAY;
+  return clamp(Math.pow(0.9, t/stability(card)), 0, 1);
+}
+function strengthClass(r){ return r >= 0.9 ? "strong" : r >= 0.7 ? "fading" : "weak"; }
+function strengthWord(r){ return r >= 0.9 ? "Solid" : r >= 0.7 ? "Fading" : "At risk"; }
+
+/* SM-2 flavoured scheduler. grade: 0 forgot · 1 hard · 2 good · 3 easy */
+function applyGrade(card, grade){
+  const now = Date.now();
+  if (grade === 0){
+    if (card.reps) card.lapses++;
+    card.ease = clamp(card.ease - 0.2, 1.3, 3.2);
+    card.intervalDays = 0.007;               // ~10 minutes
+    card.state = card.reps ? "relearning" : "learning";
+    card.due = now + 10*MIN;
+  } else {
+    card.reps++;
+    if (card.state === "new" || card.state === "learning" || card.state === "relearning"){
+      card.intervalDays = grade === 3 ? 3 : grade === 1 ? 0.5 : 1;
+      card.state = "review";
+    } else {
+      const f = grade === 1 ? 1.2 : grade === 3 ? card.ease*1.35 : card.ease;
+      card.intervalDays = clamp(Math.round(Math.max(1,card.intervalDays)*f), 1, 365);
+      card.ease = clamp(card.ease + (grade===1 ? -0.15 : grade===3 ? 0.1 : 0), 1.3, 3.2);
+    }
+    card.due = now + card.intervalDays*DAY;
+  }
+  card.lastReview = now;
+  card.seen = (card.seen||0) + 1;
+}
+
+/* ------------------------------------------------------------- storage */
+const LS_KEY = "halfterm-recall/v1";
+
+const Store = {
+  db: null, dirty: new Set(), timer: null,
+
+  async connect(){
+    try { this.db = (window.claude && window.claude.use) ? await window.claude.use("db") : null; }
+    catch(e){ this.db = null; }
+    return this.db;
+  },
+  readLocal(){
+    try { const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : null; }
+    catch(e){ return null; }
+  },
+  writeLocal(s){ try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch(e){} },
+
+  /* Shape on the server: one meta doc + one doc per subject's deck, so a
+     review only rewrites the subject you are actually studying. */
+  async pull(){
+    if (!this.db) return null;
+    try {
+      const metaSnap = await this.db.doc("app/meta").get();
+      if (!metaSnap.exists) return null;
+      const meta = metaSnap.data();
+      const decks = await this.db.collection("decks").get();
+      const cards = [];
+      decks.docs.forEach(d => (d.data().cards || []).forEach(c => cards.push(c)));
+      return {...meta, cards, updatedAt: meta.updatedAt || 0};
+    } catch(e){ return null; }
+  },
+  async pushAll(s){
+    if (!this.db) return;
+    this.dirty.add("meta");
+    s.subjects.forEach(sub => this.dirty.add("deck:" + sub.id));
+    await this.flush(s);
+  },
+  mark(key){ this.dirty.add(key); },
+  schedule(s){
+    this.writeLocal(s);
+    clearTimeout(this.timer);
+    this.timer = setTimeout(()=> this.flush(s), 1400);
+  },
+  async flush(s){
+    if (!this.db || !this.dirty.size) return;
+    const keys = [...this.dirty]; this.dirty.clear();
+    const stamp = Date.now();
+    for (const k of keys){
+      try {
+        if (k === "meta"){
+          const {cards, ...meta} = s;
+          await this.db.doc("app/meta").set({...meta, updatedAt: stamp});
+        } else {
+          const id = k.slice(5);
+          const cards = s.cards.filter(c => c.subjectId === id);
+          await this.db.collection("decks").doc(id).set({cards, updatedAt: stamp});
+        }
+      } catch(e){ /* offline or revoked — localStorage still holds the truth */ }
+    }
+  }
+};
+
+/* ------------------------------------------------------ default state */
+function academicYearStart(now = new Date()){
+  const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear()-1;
+  return y;
+}
+function defaultTerms(){
+  const y = academicYearStart();
+  const spans = [
+    ["Autumn 1", `${y}-09-02`, `${y}-10-23`],
+    ["Autumn 2", `${y}-11-02`, `${y}-12-18`],
+    ["Spring 1", `${y+1}-01-05`, `${y+1}-02-12`],
+    ["Spring 2", `${y+1}-02-22`, `${y+1}-03-26`],
+    ["Summer 1", `${y+1}-04-12`, `${y+1}-05-21`],
+    ["Summer 2", `${y+1}-06-01`, `${y+1}-07-21`],
+  ];
+  return spans.map(([name,start,end],i) => {
+    const s = parseDate(start), e = parseDate(end);
+    const mid = new Date(s + Math.floor((e-s)/2));
+    const endT = new Date(e - 3*DAY);
+    return {
+      id: "t"+(i+1), name, start, end,
+      midTest: todayKey(mid), endTest: todayKey(endT),
+      year: `${y}/${String(y+1).slice(2)}`
+    };
+  });
+}
+
+const SEED = [
+  ["Maths","Algebra: expanding & factorising","A",[
+    ["Expand 3(x + 5)","3x + 15"],
+    ["Expand (x + 2)(x + 7)","x² + 9x + 14"],
+    ["Factorise 6x + 9","3(2x + 3)"],
+    ["Factorise x² + 5x + 6","(x + 2)(x + 3)"],
+  ]],
+  ["Maths","Solving equations","B",[
+    ["Solve 4x − 7 = 21","x = 7"],
+    ["Solve 2(x + 3) = 18","x = 6"],
+    ["What do you do to both sides of an equation?","The same thing — whatever keeps it balanced"],
+  ]],
+  ["Biology","Cells","A",[
+    ["Which organelle releases energy in respiration?","The mitochondria"],
+    ["Name one part a plant cell has that an animal cell does not","Cell wall (also chloroplasts and a permanent vacuole)"],
+    ["What is the job of the cell membrane?","Controls what enters and leaves the cell"],
+    ["Where is the genetic material kept in an animal cell?","In the nucleus"],
+  ]],
+  ["Biology","Enzymes","B",[
+    ["What happens to an enzyme above its optimum temperature?","It denatures — the active site changes shape and stops working"],
+    ["Which enzyme breaks down starch?","Amylase"],
+    ["What is the 'lock and key' model describing?","How only a substrate with the right shape fits an enzyme's active site"],
+  ]],
+  ["History","Causes of WWI","A",[
+    ["What does M.A.I.N. stand for?","Militarism, Alliances, Imperialism, Nationalism"],
+    ["Who was assassinated in Sarajevo in 1914?","Archduke Franz Ferdinand"],
+    ["Which two alliance blocs faced each other in 1914?","The Triple Entente and the Triple Alliance"],
+  ]],
+  ["French","Describing people","A",[
+    ["How do you say 'I have brown hair' in French?","J'ai les cheveux bruns"],
+    ["What does 'il est bavard' mean?","He is chatty / talkative"],
+    ["How do you say 'my sister is younger than me'?","Ma sœur est plus jeune que moi"],
+  ]],
+];
+
+function newCard(o){
+  return {
+    id: uid("c_"), subjectId:o.subjectId, termId:o.termId, part:o.part||"A",
+    topic:o.topic||"General", q:o.q, a:o.a, hint:o.hint||"",
+    ease:2.5, intervalDays:0, reps:0, lapses:0, seen:0,
+    due: Date.now(), lastReview:0, state:"new",
+    example: !!o.example, created: Date.now()
+  };
+}
+
+function freshState(){
+  const terms = defaultTerms();
+  const now = Date.now();
+  const current = terms.find(t => now >= parseDate(t.start) && now <= parseDate(t.end)) || terms[0];
+  const subjects = [], cards = [];
+  SEED.forEach(([subName, topic, part, qs]) => {
+    let sub = subjects.find(s => s.name === subName);
+    if (!sub){ sub = {id: uid("s_"), name: subName, colorIdx: subjects.length % SUBJECT_COLORS.length}; subjects.push(sub); }
+    qs.forEach(([q,a]) => cards.push(newCard({subjectId:sub.id, termId:current.id, part, topic, q, a, example:true})));
+  });
+  return {
+    version: 1,
+    settings: {dailyGoal: 25, reminderTime: "17:30", notify: false, lastNudge: 0, theme: "auto"},
+    subjects, terms, cards,
+    days: {},            // "YYYY-MM-DD" -> {reviewed, correct}
+    results: [],         // test results
+    updatedAt: now
+  };
+}
+
+/* ---------------------------------------------------------- app state */
+let S = null;                    // the whole study state
+let route = "today";
+let session = null;              // live study session, if any
+
+function save(...keys){
+  S.updatedAt = Date.now();
+  keys.forEach(k => Store.mark(k));
+  if (!keys.length) Store.mark("meta");
+  Store.schedule(S);
+}
+function saveCard(card){ save("meta", "deck:" + card.subjectId); }
+
+const subjectOf = id => S.subjects.find(s => s.id === id);
+const termOf = id => S.terms.find(t => t.id === id);
+const subjColor = sub => SUBJECT_COLORS[(sub && sub.colorIdx) || 0];
+
+function currentTerm(){
+  const now = Date.now();
+  return S.terms.find(t => now >= parseDate(t.start) && now <= parseDate(t.end))
+      || S.terms.find(t => now < parseDate(t.start))
+      || S.terms[S.terms.length-1];
+}
+/* Part A up to the mid-half-term test, Part B after it. */
+function currentPart(term){ return Date.now() <= parseDate(term.midTest) ? "A" : "B"; }
+
+const newCards = () => S.cards.filter(c => !c.reps);
+const dueReview = (at=Date.now()) => S.cards.filter(c => c.reps && c.due <= at);
+/* "due" for the badge means everything worth doing now: fading reviews first, then unseen cards. */
+const dueCards = (at=Date.now()) => dueReview(at).concat(newCards());
+
+function cardsFor({termId, subjectId, part}={}){
+  return S.cards.filter(c =>
+    (!termId || c.termId === termId) &&
+    (!subjectId || c.subjectId === subjectId) &&
+    (!part || c.part === part || part === "AB"));
+}
+function readiness(cards){
+  if (!cards.length) return null;
+  const total = cards.reduce((n,c) => n + strength(c), 0);
+  return total / cards.length;
+}
+function streak(){
+  let n = 0;
+  for (let i=0;i<400;i++){
+    const k = todayKey(new Date(Date.now() - i*DAY));
+    const d = S.days[k];
+    if (d && d.reviewed > 0) n++;
+    else if (i > 0) break;
+  }
+  return n;
+}
+function logReview(correct){
+  const k = todayKey();
+  const d = S.days[k] || (S.days[k] = {reviewed:0, correct:0});
+  d.reviewed++; if (correct) d.correct++;
+}
+
+/* ------------------------------------------------------------ routing */
+function go(r){ location.hash = "#/" + r; }
+function readRoute(){
+  const r = (location.hash || "").replace(/^#\/?/,"").split("/")[0];
+  return NAV.some(n => n.id === r) ? r : "today";
+}
+window.addEventListener("hashchange", () => { route = readRoute(); render(); window.scrollTo(0,0); });
+
+/* ============================ VIEWS ================================= */
+
+function render(){
+  if (!S) return;
+  renderNav();
+  renderTopbar();
+  const v = $("#view");
+  v.innerHTML = ({
+    today: viewToday, revise: viewRevise, tests: viewTests,
+    cards: viewCards, memory: viewMemory
+  }[route] || viewToday)();
+  wireView();
+}
+
+function renderNav(){
+  const links = NAV.map(n =>
+    `<a href="#/${n.id}"${route===n.id?' aria-current="page"':''}><span class="ic">${n.ic}</span>${n.label}</a>`).join("");
+  $("#rail").innerHTML = links +
+    `<div class="rail-foot">Cards are scheduled by how fast you forget them, not by a fixed timetable.</div>`;
+  $("#tabbar").innerHTML = NAV.map(n =>
+    `<a href="#/${n.id}"${route===n.id?' aria-current="page"':''}><span class="ic">${n.ic}</span>${n.label}</a>`).join("");
+}
+
+function renderTopbar(){
+  const due = dueCards().length;
+  const t = currentTerm();
+  $("#brandSub").textContent = `${t.name} · Part ${currentPart(t)}`;
+  const pill = $("#duePill");
+  pill.classList.toggle("hot", due > 0);
+  $("#dueText").textContent = due > 0 ? `${due} due now` : "All caught up";
+}
+
+/* --------------------------------------------------------- view: today */
+function viewToday(){
+  const t = currentTerm(), part = currentPart(t);
+  const rev = dueReview(), nw = newCards(), due = rev.concat(nw);
+  const k = todayKey(), today = S.days[k] || {reviewed:0, correct:0};
+  const goal = S.settings.dailyGoal;
+  const pct = clamp(today.reviewed/goal, 0, 1);
+  const st = streak();
+  const termCards = cardsFor({termId: t.id});
+  const ready = readiness(termCards);
+
+  const mid = parseDate(t.midTest), end = parseDate(t.endTest);
+  const nextTest = Date.now() <= mid ? {kind:"mid", ts:mid, label:"Mid-half-term test"} : {kind:"end", ts:end, label:"End-of-half-term test"};
+  const cd = fmtCountdown(nextTest.ts);
+
+  const ring = donut(pct, 104, due.length > 0 ? "var(--mark)" : "var(--accent)");
+
+  const heroLine = rev.length
+    ? `<h1>${rev.length} card${rev.length===1?"":"s"} ${rev.length===1?"is":"are"} slipping</h1>
+       <p class="muted">These are the ones your memory is about to let go of. Ten minutes now is worth an hour next week.</p>`
+    : nw.length
+      ? `<h1>Nothing fading — ${nw.length} new to learn</h1>
+         <p class="muted">Everything you've already studied is still solid. Pick up the cards you haven't met yet.</p>`
+      : `<h1>Everything is solid today</h1>
+         <p class="muted">Come back when the nudge arrives. Reviewing too early wastes the effort that makes memories stick.</p>`;
+
+  return `
+  ${banner()}
+  <section class="hero">
+    <div class="hero-main">
+      <div class="hero-figure">
+        ${ring}
+        <div style="text-align:center">
+          <div class="val">${today.reviewed}</div>
+          <div class="lab">of ${goal}</div>
+        </div>
+      </div>
+      <div class="hero-copy">
+        ${heroLine}
+        <div class="row">
+          <button class="btn primary" data-act="start-due">${rev.length ? "Revise "+rev.length+" fading" : nw.length ? "Learn "+nw.length+" new cards" : "Practise anyway"}</button>
+          <a class="btn" href="#/tests">Take a test</a>
+        </div>
+      </div>
+    </div>
+    <div class="hero-strip">
+      <div><div class="k">Streak</div><div class="v">${st} day${st===1?"":"s"}</div></div>
+      <div><div class="k">${nextTest.label==="Mid-half-term test"?"Mid test":"Big test"}</div><div class="v">${cd.text}</div></div>
+      <div><div class="k">Test-ready</div><div class="v">${ready===null?"—":Math.round(ready*100)+"%"}</div></div>
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head">
+      <h2>${esc(t.name)}</h2>
+      <span class="chip ${part==="A"?"a":"b"}">Part ${part} right now</span>
+      <span class="note">${esc(t.year || "")}</span>
+    </div>
+    ${termSpine(t)}
+    <div class="halves">
+      ${halfCard(t,"A",mid,"Mid-half-term test")}
+      ${halfCard(t,"B",end,"Whole-half-term test")}
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="pad" style="padding-bottom:4px">
+      <div class="sec-head"><h2>Subjects this half-term</h2><span class="note">how much is still in there</span></div>
+    </div>
+    ${S.subjects.length ? S.subjects.map(sub => subjectRow(sub, t)).join("")
+      : `<div class="pad"><div class="empty">No subjects yet.<a class="btn" href="#/cards">Add your first cards</a></div></div>`}
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>When you'll need to revise</h2><span class="note">next 14 days</span></div>
+    ${forecastChart()}
+    <p class="small muted" style="margin-top:10px">Each bar is the number of cards whose recall will have dropped to about 90% on that day — the moment it is worth seeing them again.</p>
+  </section>`;
+}
+
+function banner(){
+  const ex = S.cards.filter(c => c.example).length;
+  if (!ex) return "";
+  return `<div class="banner">
+    <span class="ic">✎</span>
+    <div style="flex:1">
+      <b>These ${ex} cards are examples</b> so you can see how it works. Put your own lesson notes in under
+      <a href="#/cards" style="color:inherit">Cards</a> — then clear these out.
+      <div style="margin-top:8px"><button class="btn sm" data-act="clear-examples">Clear example cards</button></div>
+    </div>
+  </div>`;
+}
+
+function donut(frac, size, color){
+  const r = size/2 - 6, c = 2*Math.PI*r, off = c*(1-clamp(frac,0,1));
+  return `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="8"></circle>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="8"
+      stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+      transform="rotate(-90 ${size/2} ${size/2})"></circle>
+  </svg>`;
+}
+
+function termSpine(t){
+  const s = parseDate(t.start), e = parseDate(t.end);
+  const span = Math.max(e - s, DAY);
+  const pos = ts => clamp((ts - s)/span, 0, 1)*100;
+  const now = clamp((Date.now() - s)/span, 0, 1)*100;
+  return `<div class="spine">
+    <div class="spine-track">
+      <div class="spine-fill" style="width:${now.toFixed(1)}%"></div>
+      <div class="spine-mark mid" style="left:${pos(parseDate(t.midTest)).toFixed(1)}%" title="Mid-half-term test"></div>
+      <div class="spine-mark end" style="left:${pos(parseDate(t.endTest)).toFixed(1)}%" title="End-of-half-term test"></div>
+      <div class="spine-now" style="left:${now.toFixed(1)}%"><div class="pin"></div></div>
+    </div>
+    <div class="spine-labels">
+      <span>${fmtDate(s)} · starts</span>
+      <span>◆ ${fmtDate(parseDate(t.midTest))} mid test</span>
+      <span>${fmtDate(parseDate(t.endTest))} big test</span>
+    </div>
+  </div>`;
+}
+
+function halfCard(t, part, testTs, testName){
+  const cards = part === "A" ? cardsFor({termId:t.id, part:"A"}) : cardsFor({termId:t.id, part:"B"});
+  const scope = part === "A" ? "the first half of the half-term" : "everything from the whole half-term";
+  const r = readiness(part === "A" ? cards : cardsFor({termId:t.id}));
+  const cd = fmtCountdown(testTs);
+  return `<div class="half">
+    <h4>Part ${part} · ${testName}</h4>
+    <div class="test">${cd.text} — ${fmtDate(testTs)}. Covers ${scope}.</div>
+    <div class="cnt">${cards.length}<span class="small muted" style="font-family:var(--sans);font-weight:400"> cards</span></div>
+    <div class="bar ${r===null?"":strengthClass(r)}" style="margin-top:8px"><span style="width:${r===null?0:Math.round(r*100)}%"></span></div>
+  </div>`;
+}
+
+function subjectRow(sub, t){
+  const cards = cardsFor({termId:t.id, subjectId:sub.id});
+  const r = readiness(cards);
+  const due = cards.filter(c => c.due <= Date.now()).length;
+  return `<div class="subj">
+    <span class="subj-dot" style="background:${subjColor(sub)}"></span>
+    <span class="subj-name">${esc(sub.name)}</span>
+    <div class="subj-meter">
+      <div class="t"><span>${cards.length} cards${due?` · <b style="color:var(--mark)">${due} due</b>`:""}</span>
+        <span class="num">${r===null?"—":Math.round(r*100)+"%"}</span></div>
+      <div class="bar ${r===null?"":strengthClass(r)}"><span style="width:${r===null?0:Math.round(r*100)}%"></span></div>
+    </div>
+    <button class="btn sm" data-act="start-subject" data-id="${sub.id}">Revise</button>
+  </div>`;
+}
+
+function forecastChart(){
+  const days = 14, W = 640, H = 150, padL = 26, padB = 22, padT = 10;
+  const start = dayStart(Date.now());
+  const counts = new Array(days).fill(0);
+  S.cards.forEach(c => {
+    const i = Math.floor((dayStart(c.due) - start)/DAY);
+    if (i >= 0 && i < days) counts[i]++;
+    else if (i < 0) counts[0]++;
+  });
+  const max = Math.max(4, ...counts);
+  const bw = (W - padL - 8)/days;
+  const bars = counts.map((n,i) => {
+    const h = (H - padB - padT) * (n/max);
+    const x = padL + i*bw + bw*0.16, y = H - padB - h;
+    return `<rect class="barfill${i===0?" today":""}" x="${x.toFixed(1)}" y="${y.toFixed(1)}"
+      width="${(bw*0.68).toFixed(1)}" height="${Math.max(h,n?2:0).toFixed(1)}" rx="2.5"></rect>
+      ${n?`<text x="${(x+bw*0.34).toFixed(1)}" y="${(y-3).toFixed(1)}" text-anchor="middle">${n}</text>`:""}`;
+  }).join("");
+  const labels = counts.map((n,i) => {
+    if (i%2 && i!==0) return "";
+    const d = new Date(start + i*DAY);
+    return `<text x="${(padL + i*bw + bw*0.5).toFixed(1)}" y="${H-padB+13}" text-anchor="middle">${i===0?"today":d.getDate()+"/"+(d.getMonth()+1)}</text>`;
+  }).join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cards becoming due over the next 14 days">
+    <line class="axis" x1="${padL}" y1="${H-padB}" x2="${W-4}" y2="${H-padB}"></line>
+    <text x="4" y="${padT+8}">${max}</text><text x="4" y="${H-padB}">0</text>
+    ${bars}${labels}
+  </svg>`;
+}
+
+/* -------------------------------------------------------- view: revise */
+function viewRevise(){
+  const t = currentTerm();
+  const due = dueReview(), nw = newCards();
+  const weak = S.cards.filter(c => c.reps && strength(c) < 0.7).sort((a,b)=> strength(a)-strength(b));
+  const leeches = S.cards.filter(c => c.lapses >= 3).sort((a,b)=> b.lapses - a.lapses);
+
+  return `
+  <section>
+    <div class="sec-head"><h2>Revise</h2><span class="note">answer, and anything you miss comes straight back</span></div>
+    <div class="grid2">
+      ${deckTile("Due now", due.length, "The cards your memory is dropping. Always start here.", "start-due", due.length===0)}
+      ${deckTile("Learn new", nw.length, "Cards you have added but never studied.", "start-new", nw.length===0)}
+      ${deckTile("Weak spots", weak.length, "Below 70% recall — the things that keep escaping.", "start-weak", weak.length===0)}
+      ${deckTile("Tricky cards", leeches.length, "Forgotten three times or more. These need a different angle.", "start-leech", leeches.length===0)}
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>Revise a specific half-term</h2></div>
+    <div class="grid2">
+      <label class="field">Subject
+        <select id="rvSubject"><option value="">Every subject</option>
+          ${S.subjects.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}
+        </select></label>
+      <label class="field">Half-term
+        <select id="rvTerm">${S.terms.map(x=>`<option value="${x.id}"${x.id===t.id?" selected":""}>${esc(x.name)}</option>`).join("")}</select></label>
+      <label class="field">Which part
+        <select id="rvPart">
+          <option value="AB">Whole half-term (A + B)</option>
+          <option value="A">Part A — first half only</option>
+          <option value="B">Part B — second half only</option>
+        </select></label>
+      <label class="field">How to ask
+        <select id="rvMode">
+          <option value="mixed">Mixed — flashcards, multiple choice, typing</option>
+          <option value="flash">Flashcards only</option>
+          <option value="choice">Multiple choice only</option>
+          <option value="type">Type the answer</option>
+        </select></label>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" data-act="start-custom">Start revising</button>
+      <span class="small muted" id="rvCount"></span>
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>What "I don't know" does</h2></div>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><span class="b">Press it the moment you blank. <b>Guessing and waiting doesn't build the memory</b> — seeing the answer does.</span></div>
+      <div class="step"><span class="n">2</span><span class="b">That card jumps back in <b>three questions later</b>, then again near the end of the session.</span></div>
+      <div class="step"><span class="n">3</span><span class="b">It won't leave the session until you have got it right <b>twice in a row</b>.</span></div>
+      <div class="step"><span class="n">4</span><span class="b">Afterwards it comes back <b>tomorrow</b> instead of in two weeks, and climbs again from there.</span></div>
+    </div>
+  </section>`;
+}
+
+function deckTile(title, n, desc, act, disabled){
+  return `<div class="card pad" style="display:flex;flex-direction:column;gap:9px">
+    <div class="spread"><h3 style="font-size:16px">${title}</h3><span class="num" style="font-size:26px;color:${n?"var(--ink)":"var(--ink-3)"}">${n}</span></div>
+    <p class="small muted" style="flex:1">${desc}</p>
+    <button class="btn${n&&act==="start-due"?" primary":""}" data-act="${act}"${disabled?" disabled":""}>Start</button>
+  </div>`;
+}
+
+/* --------------------------------------------------------- view: tests */
+function viewTests(){
+  const t = currentTerm();
+  const results = S.results.slice().sort((a,b)=> b.date - a.date);
+  return `
+  <section>
+    <div class="sec-head"><h2>Tests</h2><span class="note">sit a mock exactly like the real one</span></div>
+    <div class="grid2">
+      ${testTile(t,"mid")}
+      ${testTile(t,"end")}
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>Test dates</h2><span class="note">set these from your timetable</span></div>
+    <div class="stack">
+      ${S.terms.map(term => `
+        <div class="spread" style="gap:10px;padding:10px 0;border-bottom:1px solid var(--line)">
+          <div style="min-width:96px"><b>${esc(term.name)}</b>
+            <div class="small muted">${fmtDate(parseDate(term.start))} – ${fmtDate(parseDate(term.end))}</div></div>
+          <label class="field" style="flex:1 1 130px">Mid-half-term test
+            <input type="date" value="${term.midTest}" data-term="${term.id}" data-kind="midTest"></label>
+          <label class="field" style="flex:1 1 130px">End-of-half-term test
+            <input type="date" value="${term.endTest}" data-term="${term.id}" data-kind="endTest"></label>
+        </div>`).join("")}
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>Your results</h2></div>
+    ${results.length ? `<div class="stack">${results.slice(0,12).map(r => {
+      const sub = subjectOf(r.subjectId), term = termOf(r.termId);
+      const p = Math.round(r.score/r.total*100);
+      return `<div class="spread" style="border-bottom:1px solid var(--line);padding-bottom:9px">
+        <div><b>${esc(term?term.name:"—")} · ${r.kind==="mid"?"Mid":"Whole"} half-term</b>
+          <div class="small muted">${sub?esc(sub.name):"All subjects"} · ${fmtDateLong(r.date)}</div></div>
+        <div class="row">
+          <span class="num" style="font-size:19px">${r.score}/${r.total}</span>
+          <span class="chip ${p>=90?"strong":p>=70?"fading":"weak"}">${p}%</span>
+        </div></div>`;
+    }).join("")}</div>` : `<div class="empty">No tests sat yet. A mock a week before the real one is worth more than three re-reads of your notes.</div>`}
+  </section>`;
+}
+
+function testTile(t, kind){
+  const isMid = kind === "mid";
+  const cards = isMid ? cardsFor({termId:t.id, part:"A"}) : cardsFor({termId:t.id});
+  const ts = parseDate(isMid ? t.midTest : t.endTest);
+  const cd = fmtCountdown(ts);
+  const r = readiness(cards);
+  const prev = S.results.filter(x => x.termId===t.id && x.kind===kind).sort((a,b)=>b.date-a.date)[0];
+  return `<div class="card pad" style="display:flex;flex-direction:column;gap:10px">
+    <div class="spread">
+      <h3 style="font-size:16.5px">${isMid?"Mid-half-term test":"Whole-half-term test"}</h3>
+      <span class="chip ${cd.days<=3?"weak":cd.days<=10?"fading":"outline"}">${cd.text}</span>
+    </div>
+    <p class="small muted">${isMid
+      ? "Everything from Part A — the lessons in the first half of this half-term."
+      : "Part A and Part B together — the full half-term, which is what the real paper covers."}</p>
+    <div class="row small">
+      <span class="num" style="font-size:22px">${cards.length}</span><span class="muted">questions</span>
+      <span style="margin-left:auto" class="chip ${r===null?"outline":strengthClass(r)}">${r===null?"no cards":Math.round(r*100)+"% ready"}</span>
+    </div>
+    ${prev?`<div class="small muted">Last attempt: ${prev.score}/${prev.total} on ${fmtDate(prev.date)}</div>`:""}
+    <button class="btn primary" data-act="start-test" data-kind="${kind}"${cards.length?"":" disabled"}>Sit the mock</button>
+  </div>`;
+}
+
+/* --------------------------------------------------------- view: cards */
+function viewCards(){
+  const t = currentTerm();
+  const sel = viewCards.sel || (viewCards.sel = {termId:t.id, subjectId: S.subjects[0] ? S.subjects[0].id : ""});
+  if (!S.subjects.some(s => s.id === sel.subjectId)) sel.subjectId = S.subjects[0] ? S.subjects[0].id : "";
+  const list = cardsFor({termId:sel.termId, subjectId:sel.subjectId});
+  const topics = {};
+  list.forEach(c => (topics[c.topic] = topics[c.topic] || []).push(c));
+
+  return `
+  <section>
+    <div class="sec-head"><h2>Your cards</h2><span class="note">${S.cards.length} in total</span></div>
+    <div class="card pad">
+      <div class="grid2">
+        <label class="field">Subject
+          <select id="cdSubject">${S.subjects.map(s=>`<option value="${s.id}"${s.id===sel.subjectId?" selected":""}>${esc(s.name)}</option>`).join("")}
+          </select></label>
+        <label class="field">Half-term
+          <select id="cdTerm">${S.terms.map(x=>`<option value="${x.id}"${x.id===sel.termId?" selected":""}>${esc(x.name)}</option>`).join("")}</select></label>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn sm" data-act="new-subject">+ New subject</button>
+        ${S.subjects.length?`<button class="btn sm danger" data-act="del-subject">Delete subject</button>`:""}
+      </div>
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>Add from today's lesson</h2></div>
+    <div class="grid2">
+      <label class="field">Topic
+        <input type="text" id="adTopic" placeholder="e.g. Photosynthesis" value="${esc(viewCards.lastTopic||"")}"></label>
+      <label class="field">Which half of the half-term
+        <select id="adPart">
+          <option value="A"${currentPart(termOf(sel.termId)||t)==="A"?" selected":""}>Part A — before the mid test</option>
+          <option value="B"${currentPart(termOf(sel.termId)||t)==="B"?" selected":""}>Part B — after the mid test</option>
+        </select></label>
+    </div>
+    <label class="field" style="margin-top:12px">Question
+      <input type="text" id="adQ" placeholder="What does the mitochondria do?"></label>
+    <label class="field" style="margin-top:12px">Answer
+      <input type="text" id="adA" placeholder="Releases energy during respiration"></label>
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" data-act="add-card">Add card</button>
+      <button class="btn" data-act="toggle-bulk">Paste a whole list</button>
+    </div>
+    <div id="bulkBox" hidden style="margin-top:14px">
+      <label class="field">One per line, question and answer split by <code>|</code> — or start a line with <code>#</code> to set the topic.
+        <textarea id="adBulk" rows="7" placeholder="# Photosynthesis
+What gas do plants take in? | Carbon dioxide
+Where does photosynthesis happen? | In the chloroplasts
+# Respiration
+Word equation for aerobic respiration | glucose + oxygen → carbon dioxide + water"></textarea></label>
+      <button class="btn primary" data-act="add-bulk" style="margin-top:10px">Add all of them</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>${esc((subjectOf(sel.subjectId)||{}).name||"—")} · ${esc((termOf(sel.termId)||{}).name||"")}</h2>
+      <span class="note">${list.length} cards</span></div>
+    ${Object.keys(topics).length ? `<div class="stack">${Object.entries(topics).map(([topic,cs]) => {
+      const r = readiness(cs);
+      return `<div class="topic-group">
+        <div class="topic-head">
+          <h4>${esc(topic)}</h4>
+          <span class="chip ${cs[0].part==="A"?"a":"b"}">Part ${cs[0].part}</span>
+          <span class="chip ${r===null?"outline":strengthClass(r)}">${Math.round((r||0)*100)}%</span>
+        </div>
+        ${cs.map(c => {
+          const s = strength(c);
+          return `<div class="cardrow">
+            <div class="txt"><div class="q">${esc(c.q)}</div><div class="a">${esc(c.a)}</div>
+              <div class="small muted" style="margin-top:3px;font-family:var(--mono);font-size:11.5px">
+                ${c.reps?`seen ${c.seen}× · next in ${fmtInterval(c.intervalDays)}${c.lapses?` · forgotten ${c.lapses}×`:""}`:"not studied yet"}</div>
+            </div>
+            <span class="strengthdot" style="color:var(--${c.reps?strengthClass(s):"ink-3"})">${c.reps?Math.round(s*100):"—"}</span>
+            <button class="iconbtn" data-act="del-card" data-id="${c.id}" title="Delete card" aria-label="Delete card">×</button>
+          </div>`;
+        }).join("")}
+      </div>`;
+    }).join("")}</div>` : `<div class="empty">Nothing here yet. Add what you covered in class today — even five cards a lesson adds up fast.</div>`}
+  </section>`;
+}
+
+/* -------------------------------------------------------- view: memory */
+function viewMemory(){
+  const studied = S.cards.filter(c => c.reps);
+  const avg = readiness(studied);
+  const atRisk = studied.filter(c => strength(c) < 0.7).length;
+  const next = S.cards.filter(c => c.due > Date.now()).sort((a,b)=>a.due-b.due)[0];
+  const totalReviews = Object.values(S.days).reduce((n,d)=>n+d.reviewed,0);
+
+  return `
+  <section class="card pad">
+    <div class="sec-head"><h2>What your brain is doing</h2></div>
+    <div class="sci">
+      <p>When you learn something in a lesson, neurons fire together and the connections between them — the synapses — get
+      temporarily stronger. That's a fragile, short-term change. Unless the memory gets used again, your brain does not
+      keep paying to maintain it: the synapse weakens back down, and within a few days the information is effectively gone.
+      It isn't broken; it's your brain being efficient about what deserves the space.</p>
+      <p class="pull">Every time you pull a fact back out of your head, your brain treats it as "this one matters"
+      and rebuilds the connection stronger and slower to fade. That is why answering questions beats re-reading notes.</p>
+      <p>Hermann Ebbinghaus measured that fade in 1885 and got a curve: forgetting is fast at first, then levels off.
+      This app models your memory of each card as <span class="num">R = 0.9<sup>t/S</sup></span> — your chance of recalling it
+      <span class="num">t</span> days after the last time you got it right, where <span class="num">S</span> is how stable
+      that memory has become. A card falls due exactly when that chance drops to 90%, because reviewing right at the edge
+      of forgetting is what buys the biggest jump in stability.</p>
+    </div>
+    ${decayChart()}
+    <p class="small muted" style="margin-top:8px">The dotted line is one lesson and no revision. The solid line is the same
+    material reviewed each time it reaches 90% — each review makes the next fall slower.</p>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>Your memory right now</h2></div>
+    <div class="grid3">
+      ${statTile("Average recall", avg===null?"—":Math.round(avg*100)+"%", "across everything you've studied")}
+      ${statTile("Fading", atRisk, "cards below 70% recall")}
+      ${statTile("Next nudge", next?fmtCountdown(next.due).text:"—", next?fmtDate(next.due):"nothing scheduled")}
+      ${statTile("Questions answered", totalReviews, "all time")}
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>Reminders</h2><span class="note">so you catch cards before they go</span></div>
+    <p class="small muted" style="margin-bottom:12px">Your browser can pop a reminder up when a batch of cards reaches the
+    edge of forgetting, and once a day at a time you choose. It fires while this page is open in a tab — keep it pinned,
+    or add it to your home screen, and you'll get the nudge.</p>
+    <div class="grid2">
+      <label class="field">Daily reminder time
+        <input type="time" id="stTime" value="${esc(S.settings.reminderTime)}"></label>
+      <label class="field">Questions a day target
+        <input type="number" id="stGoal" min="5" max="200" step="5" value="${S.settings.dailyGoal}"></label>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn ${S.settings.notify?"":"primary"}" data-act="notify">${notifyLabel()}</button>
+      <span class="small muted" id="notifyState">${notifyState()}</span>
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>Your study data</h2></div>
+    <p class="small muted">Everything is stored on this device${Store.db?", and synced to your account so it follows you between devices":""}.
+    Export a backup before you clear your browser data.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" data-act="export">Export backup</button>
+      <button class="btn" data-act="import">Import backup</button>
+      <button class="btn danger" data-act="reset">Reset everything</button>
+    </div>
+  </section>`;
+}
+
+function statTile(k, v, sub){
+  return `<div style="border:1px solid var(--line);border-radius:var(--r-m);padding:13px 14px;background:var(--surface-2)">
+    <div class="eyebrow">${k}</div>
+    <div class="num" style="font-size:25px;margin-top:3px">${v}</div>
+    <div class="small muted" style="margin-top:1px">${sub}</div>
+  </div>`;
+}
+
+function decayChart(){
+  const W = 640, H = 190, padL = 34, padR = 10, padT = 14, padB = 26;
+  const days = 30;
+  const x = d => padL + (d/days)*(W-padL-padR);
+  const y = r => padT + (1-r)*(H-padT-padB);
+
+  // no revision: one study session, S = 1 day
+  let decay = [];
+  for (let d=0; d<=days; d+=0.25) decay.push(`${x(d).toFixed(1)},${y(Math.pow(0.9, d/1)).toFixed(1)}`);
+
+  // spaced: review whenever R hits 0.9, stability multiplies by the ease each time
+  let pts = [], t = 0, S0 = 1, ease = 2.5, marks = [];
+  while (t <= days){
+    const end = Math.min(t + S0, days);
+    for (let d=t; d<=end; d+=0.25) pts.push(`${x(d).toFixed(1)},${y(Math.pow(0.9,(d-t)/S0)).toFixed(1)}`);
+    if (end >= days) break;
+    marks.push(end);
+    pts.push(`${x(end).toFixed(1)},${y(1).toFixed(1)}`);
+    t = end; S0 = S0*ease;
+  }
+  const gridY = [1,0.9,0.5,0].map(r =>
+    `<line class="axis" x1="${padL}" y1="${y(r)}" x2="${W-padR}" y2="${y(r)}" ${r===0.9?'stroke-dasharray="4 4"':""}></line>
+     <text x="4" y="${(y(r)+3).toFixed(1)}">${Math.round(r*100)}%</text>`).join("");
+  const marksSvg = marks.map(m =>
+    `<circle cx="${x(m).toFixed(1)}" cy="${y(0.9).toFixed(1)}" r="3.6" fill="var(--accent)"></circle>`).join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Forgetting curve with and without spaced review" style="margin-top:14px">
+    ${gridY}
+    <polyline class="curve decay" points="${decay.join(" ")}"></polyline>
+    <polyline class="curve" points="${pts.join(" ")}"></polyline>
+    ${marksSvg}
+    <text x="${padL}" y="${H-8}">day 0</text>
+    <text x="${W-padR}" y="${H-8}" text-anchor="end">day 30</text>
+    <text x="${x(6).toFixed(1)}" y="${(y(0.18)).toFixed(1)}" fill="var(--weak)">no revision</text>
+    <text x="${x(11).toFixed(1)}" y="${(y(0.97)).toFixed(1)}" fill="var(--accent)">reviewed at the edge</text>
+  </svg>`;
+}
+
+function notifyLabel(){
+  if (!("Notification" in window)) return "Not supported in this browser";
+  if (Notification.permission === "granted") return S.settings.notify ? "Turn reminders off" : "Turn reminders on";
+  return "Turn reminders on";
+}
+function notifyState(){
+  if (!("Notification" in window)) return "This browser can't show reminders — the badge at the top still counts your due cards.";
+  if (Notification.permission === "denied") return "Blocked in your browser settings — the due badge at the top still works.";
+  if (Notification.permission === "granted") return S.settings.notify ? "On — you'll be nudged when cards start fading." : "Off.";
+  return "Your browser will ask you to allow them.";
+}
+
+/* ========================== SESSION ENGINE ========================== */
+/*  A session is a queue of items. An item leaves only when `needed`
+    reaches 0. Forgetting a card sets needed back to 2 and pushes it a
+    few places down the queue, so you meet it again almost immediately
+    and then once more later — spacing inside the session itself.      */
+
+function startSession(cards, opts={}){
+  if (!cards.length){ toast("No cards in there yet."); return; }
+  const items = shuffle(cards).map(c => ({id:c.id, needed:1, worst:3, wrong:0}));
+  session = {
+    queue: items, mode: opts.mode || "mixed", test: !!opts.test,
+    title: opts.title || "Revision", kind: opts.kind, termId: opts.termId, subjectId: opts.subjectId,
+    total: items.length, done: 0, answered: 0, correct: 0,
+    revealed: false, verdict: null, chosen: null, results: [], finished: false
+  };
+  document.body.style.overflow = "hidden";
+  renderSession();
+}
+function endSession(rerender=true){
+  session = null;
+  document.body.style.overflow = "";
+  $("#overlay").innerHTML = "";
+  if (rerender) render();
+}
+
+const sCard = () => S.cards.find(c => c.id === session.queue[0].id);
+
+function modeFor(card){
+  const m = session.mode;
+  if (m !== "mixed") return m;
+  const short = card.a.length <= 26;
+  const pool = ["flash","flash","choice"];
+  if (short) pool.push("type","choice");
+  return pick(pool);
+}
+/* Wrong options should be plausible, so take them from the same topic first,
+   then the same subject, and only fall back to other subjects if it's a thin deck. */
+function distractors(card, n=3){
+  const usable = c => c.id !== card.id && norm(c.a) !== norm(card.a);
+  const tiers = [
+    S.cards.filter(c => usable(c) && c.subjectId === card.subjectId && c.topic === card.topic),
+    S.cards.filter(c => usable(c) && c.subjectId === card.subjectId),
+    S.cards.filter(c => usable(c) && c.termId === card.termId),
+    S.cards.filter(usable)
+  ];
+  const seen = new Set([norm(card.a)]), out = [];
+  tiers.forEach(tier => shuffle(tier).forEach(c => {
+    if (out.length < n && !seen.has(norm(c.a))){ seen.add(norm(c.a)); out.push(c.a); }
+  }));
+  return out;
+}
+
+function renderSession(){
+  if (!session) return;
+  if (session.finished) return renderResults();
+  const item = session.queue[0];
+  if (!item) return finishSession();
+  const card = sCard();
+  if (!card){ session.queue.shift(); return renderSession(); }
+  if (!session.view) session.view = modeFor(card);
+
+  const sub = subjectOf(card.subjectId);
+  const left = session.queue.length;
+  const toNail = session.queue.filter(i => i.needed > 1 || i.wrong).length;
+  const prog = session.total ? session.done/session.total : 0;
+
+  const body = session.view === "choice" ? choiceBody(card)
+             : session.view === "type" ? typeBody(card)
+             : flashBody(card);
+
+  $("#overlay").innerHTML = `
+  <div class="session" role="dialog" aria-label="${esc(session.title)}">
+    <div class="s-top">
+      <button class="iconbtn" data-act="quit" title="Finish session" aria-label="Finish session">✕</button>
+      <div class="s-prog"><span style="width:${(prog*100).toFixed(1)}%"></span></div>
+      <span class="s-count">${left} to go${toNail?` · ${toNail} to nail`:""}</span>
+    </div>
+    <div class="s-body"><div class="s-inner">
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="chip" style="background:${subjColor(sub)}1a;color:${subjColor(sub)}">${esc(sub?sub.name:"—")}</span>
+          <span class="chip outline">${esc(card.topic)}</span>
+          <span class="chip ${card.part==="A"?"a":"b"}">Part ${card.part}</span>
+          ${item.wrong?`<span class="chip weak">missed ${item.wrong}× — again</span>`:""}
+        </div>
+        <div class="q-text">${esc(card.q)}</div>
+        ${body}
+      </div>
+      ${session.revealed && !session.test ? nextUpNote(card) : ""}
+    </div></div>
+    <div class="s-foot"><div class="s-foot-inner">${footer(card)}</div></div>
+  </div>`;
+
+  const inp = $("#typeInput");
+  if (inp && !session.revealed) inp.focus();
+}
+
+function flashBody(card){
+  if (!session.revealed) return card.hint ? `<p class="small muted">Hint: ${esc(card.hint)}</p>` : "";
+  return `<div class="a-text"><span class="lab">Answer</span>${esc(card.a)}</div>`;
+}
+function choiceBody(card){
+  if (!session.choices) session.choices = shuffle([card.a, ...distractors(card)]);
+  return `<div class="choices">${session.choices.map((c,i) => {
+    let cls = "choice";
+    if (session.revealed){
+      if (c === card.a) cls += " right";
+      else if (session.chosen === c) cls += " wrong";
+    }
+    return `<button class="${cls}" data-act="choose" data-val="${esc(c)}"${session.revealed?" disabled":""}>
+      <span class="key">${i+1}</span><span>${esc(c)}</span></button>`;
+  }).join("")}</div>`;
+}
+function typeBody(card){
+  if (!session.revealed){
+    return `<div class="typerow">
+      <input type="text" id="typeInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer…">
+      <button class="btn primary" data-act="submit-type">Check</button>
+    </div>`;
+  }
+  const v = session.verdict;
+  return `<div class="stack">
+    <div class="verdict ${v}">${v==="ok"?"✓ Correct":v==="near"?"≈ Nearly — check the wording":"✕ Not quite"}
+      ${session.typed?`<span class="muted" style="font-weight:400">· you put “${esc(session.typed)}”</span>`:""}</div>
+    <div class="a-text"><span class="lab">Answer</span>${esc(card.a)}</div>
+  </div>`;
+}
+
+function nextUpNote(card){
+  if (session.verdict === "no") return `<p class="small muted" style="text-align:center">You'll meet this one again in a moment, and it's booked back in for tomorrow.</p>`;
+  const preview = card.state === "new" || !card.reps ? "1 day" : fmtInterval(clamp(Math.round(Math.max(1,card.intervalDays)*card.ease),1,365));
+  return `<p class="small muted" style="text-align:center">Getting this right moves it to about <span class="num">${preview}</span> away.</p>`;
+}
+
+function footer(card){
+  if (session.test){
+    if (!session.revealed){
+      return `<div class="stack">
+        ${session.view==="flash"?`<button class="btn primary wide" data-act="reveal-test">Show the answer</button>`:""}
+        <button class="dunno" data-act="dunno-test">I don't know</button>
+      </div>`;
+    }
+    /* A flashcard has nothing to mark it against, so you mark it yourself —
+       honestly, the way you would against a mark scheme. */
+    if (session.verdict === null){
+      return `<div class="grades" style="grid-template-columns:1fr 1fr">
+        <button class="grade g0" data-act="mark-test" data-ok="0">Got it wrong<small>goes on the fix list</small></button>
+        <button class="grade g2" data-act="mark-test" data-ok="1">Got it right<small>counts as a mark</small></button>
+      </div>`;
+    }
+    return `<button class="btn primary wide" data-act="next-test">Next question</button>`;
+  }
+  if (!session.revealed){
+    return `<div class="stack">
+      ${session.view==="flash"?`<button class="btn primary wide" data-act="reveal">Show the answer</button>`:""}
+      <button class="dunno" data-act="dunno">I don't know — tell me</button>
+      <div class="kbd-hint">space = show · 1–4 = how it went · D = I don't know</div>
+    </div>`;
+  }
+  /* Saying you didn't know it settles the grade — no chance to talk yourself
+     into "got it" once the answer is on the screen. */
+  if (session.verdict === "no"){
+    return `<div class="stack">
+      <button class="btn primary wide" data-act="grade" data-g="0">Read it, got it — ask me again shortly</button>
+      <div class="kbd-hint">this card comes back in 3 questions, and again before you finish</div>
+    </div>`;
+  }
+  const suggested = session.verdict === "near" ? 1 : null;
+  return `<div class="stack">
+    <div class="grades">
+      ${grade(0,"Forgot","again",suggested===0)}
+      ${grade(1,"Hard",fmtInterval(card.reps?Math.max(1,card.intervalDays)*1.2:0.5),suggested===1)}
+      ${grade(2,"Got it",fmtInterval(card.reps&&card.state==="review"?Math.max(1,card.intervalDays)*card.ease:1))}
+      ${grade(3,"Easy",fmtInterval(card.reps&&card.state==="review"?Math.max(1,card.intervalDays)*card.ease*1.35:3))}
+    </div>
+    <div class="kbd-hint">1 forgot · 2 hard · 3 got it · 4 easy</div>
+  </div>`;
+}
+function grade(g, label, sub, hi){
+  return `<button class="grade g${g}" data-act="grade" data-g="${g}"${hi?' style="border-color:currentColor"':""}>
+    ${label}<small>${sub}</small></button>`;
+}
+
+function reveal(verdict){
+  session.revealed = true;
+  session.verdict = verdict || null;
+  renderSession();
+}
+
+function answer(grade){
+  const item = session.queue[0], card = sCard();
+  item.worst = Math.min(item.worst, grade);
+  session.answered++;
+  if (grade > 0) session.correct++;
+  logReview(grade > 0);
+
+  if (grade === 0){
+    item.needed = 2; item.wrong++;
+    session.queue.shift();
+    session.queue.splice(Math.min(3, session.queue.length), 0, item);
+  } else {
+    item.needed--;
+    session.queue.shift();
+    if (item.needed > 0){
+      session.queue.splice(Math.min(6, session.queue.length), 0, item);
+    } else {
+      applyGrade(card, item.worst);
+      session.done++;
+      saveCard(card);
+    }
+  }
+  session.revealed = false; session.verdict = null; session.chosen = null;
+  session.choices = null; session.view = null; session.typed = "";
+  save("meta");
+  if (!session.queue.length) return finishSession();
+  renderSession();
+}
+
+/* test mode: one pass, graded at the end */
+function testAnswer(correct){
+  const item = session.queue[0], card = sCard();
+  session.answered++;
+  if (correct) session.correct++;
+  session.results.push({cardId: card.id, correct});
+  logReview(correct);
+  session.queue.shift();
+  session.done++;
+  session.revealed = false; session.verdict = null; session.chosen = null;
+  session.choices = null; session.view = null; session.typed = "";
+  if (!session.queue.length) return finishSession();
+  renderSession();
+}
+
+function finishSession(){
+  if (session.test){
+    const missed = session.results.filter(r => !r.correct).map(r => r.cardId);
+    // A mock counts as real practice: right answers schedule forward, wrong ones come back tomorrow.
+    session.results.forEach(r => {
+      const c = S.cards.find(x => x.id === r.cardId);
+      if (c){ applyGrade(c, r.correct ? 2 : 0); if (!r.correct) c.due = Date.now() + 12*3600000; }
+    });
+    S.results.push({
+      id: uid("r_"), termId: session.termId, subjectId: session.subjectId || "",
+      kind: session.kind, date: Date.now(), score: session.correct, total: session.total, missed
+    });
+    Store.mark("meta"); S.subjects.forEach(s => Store.mark("deck:"+s.id)); Store.schedule(S);
+    session.finished = true;
+    return renderResults();
+  }
+  session.finished = true;
+  save("meta");
+  renderResults();
+}
+
+function renderResults(){
+  const isTest = session.test;
+  const pct = session.total ? Math.round((session.correct/Math.max(session.answered,1))*100) : 0;
+  const score = isTest ? Math.round(session.correct/session.total*100) : pct;
+  const missed = isTest ? session.results.filter(r => !r.correct) : [];
+  const ring = donut(score/100, 132, score>=90?"var(--strong)":score>=70?"var(--fading)":"var(--weak)");
+  const headline = isTest
+    ? (score>=90 ? "Full marks territory." : score>=70 ? "Close. The gap is a short list." : "Good — now you know exactly what to fix.")
+    : "Session done.";
+
+  $("#overlay").innerHTML = `
+  <div class="session">
+    <div class="s-top">
+      <button class="iconbtn" data-act="quit" aria-label="Close">✕</button>
+      <div class="s-count" style="margin-left:auto">${esc(session.title)}</div>
+    </div>
+    <div class="s-body"><div class="s-inner">
+      <div class="q-card" style="align-items:center;text-align:center">
+        <div class="score-ring">${ring}<div><div class="pct">${score}%</div></div></div>
+        <h2 style="font-size:21px">${headline}</h2>
+        <p class="muted">${isTest
+          ? `You got <b>${session.correct} of ${session.total}</b> right.`
+          : `<b>${session.total}</b> cards nailed · <b>${session.answered}</b> questions answered.`}</p>
+      </div>
+
+      ${missed.length ? `<div class="card pad">
+        <div class="sec-head"><h3 style="font-size:16px">The ${missed.length} to fix</h3></div>
+        <div class="miss-list">${missed.map(r => {
+          const c = S.cards.find(x => x.id === r.cardId); if (!c) return "";
+          return `<div class="miss"><div><div class="qq">${esc(c.q)}</div><div class="aa">${esc(c.a)}</div></div></div>`;
+        }).join("")}</div>
+        <button class="btn primary wide" data-act="fix-missed" style="margin-top:14px">Drill these until they stick</button>
+      </div>` : ""}
+
+      ${!isTest && session.total ? `<div class="card pad">
+        <p class="small muted" style="text-align:center">These cards are booked back in for the day your recall of each
+        drops to 90%. The badge at the top will tell you when.</p></div>` : ""}
+
+      <button class="btn wide" data-act="quit">Done</button>
+    </div></div>
+  </div>`;
+}
+
+/* ============================== EVENTS ============================== */
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.dataset.act;
+  const A = ACTIONS[act];
+  if (A){ e.preventDefault(); A(el); }
+});
+
+const ACTIONS = {
+  /* --- starting sessions --- */
+  "start-due": () => {
+    const rev = dueReview(), nw = newCards();
+    startSession(rev.length ? rev : nw.length ? nw : shuffle(S.cards).slice(0,20),
+                 {title: rev.length ? "Cards that are fading" : nw.length ? "New cards" : "Free practice"});
+  },
+  "start-new": () => startSession(newCards(), {title:"New cards"}),
+  "start-weak": () => startSession(S.cards.filter(c => c.reps && strength(c) < 0.7), {title:"Weak spots"}),
+  "start-leech": () => startSession(S.cards.filter(c => c.lapses >= 3), {title:"Tricky cards"}),
+  "start-subject": el => {
+    const t = currentTerm();
+    const cards = cardsFor({termId:t.id, subjectId:el.dataset.id});
+    const due = cards.filter(c => c.due <= Date.now());
+    startSession(due.length ? due : cards, {title: (subjectOf(el.dataset.id)||{}).name || "Revision"});
+  },
+  "start-custom": () => {
+    const subjectId = $("#rvSubject").value, termId = $("#rvTerm").value;
+    const part = $("#rvPart").value, mode = $("#rvMode").value;
+    const cards = cardsFor({termId, subjectId: subjectId||undefined, part: part==="AB"?undefined:part});
+    startSession(cards, {mode, title:`${(termOf(termId)||{}).name||""} · Part ${part}`});
+  },
+  "start-test": el => {
+    const t = currentTerm(), kind = el.dataset.kind;
+    const cards = kind === "mid" ? cardsFor({termId:t.id, part:"A"}) : cardsFor({termId:t.id});
+    startSession(cards, {
+      test:true, kind, termId:t.id, mode:"mixed",
+      title: `${t.name} · ${kind==="mid"?"mid-half-term":"whole half-term"} mock`
+    });
+  },
+  "fix-missed": () => {
+    const ids = session.results.filter(r => !r.correct).map(r => r.cardId);
+    const cards = S.cards.filter(c => ids.includes(c.id));
+    endSession(false);
+    startSession(cards, {title:"Fixing what you missed"});
+  },
+
+  /* --- inside a session --- */
+  "reveal": () => reveal(),
+  "reveal-test": () => reveal(),
+  "dunno": () => reveal("no"),
+  "dunno-test": () => reveal("no"),
+  "next-test": () => testAnswer(session.verdict === "ok"),
+  "mark-test": el => testAnswer(el.dataset.ok === "1"),
+  "grade": el => answer(Number(el.dataset.g)),
+  "choose": el => {
+    const card = sCard(), val = el.dataset.val;
+    session.chosen = val;
+    reveal(val === card.a ? "ok" : "no");
+  },
+  "submit-type": () => {
+    const card = sCard(), given = ($("#typeInput")||{}).value || "";
+    session.typed = given.trim();
+    reveal(markTyped(given, card.a));
+  },
+  "quit": () => {
+    if (session && !session.finished && session.done < session.total && session.answered > 0) {
+      if (!confirm("Finish here? Cards you haven't answered stay due.")) return;
+    }
+    endSession();
+  },
+
+  /* --- cards management --- */
+  "toggle-bulk": () => { const b = $("#bulkBox"); b.hidden = !b.hidden; if (!b.hidden) $("#adBulk").focus(); },
+  "add-card": () => {
+    const q = $("#adQ").value.trim(), a = $("#adA").value.trim();
+    if (!q || !a) return toast("Needs both a question and an answer.");
+    const topic = $("#adTopic").value.trim() || "General";
+    viewCards.lastTopic = topic;
+    const c = newCard({subjectId: viewCards.sel.subjectId, termId: viewCards.sel.termId, part: $("#adPart").value, topic, q, a});
+    S.cards.push(c); saveCard(c);
+    toast("Card added."); render();
+  },
+  "add-bulk": () => {
+    const raw = $("#adBulk").value;
+    let topic = $("#adTopic").value.trim() || "General";
+    const part = $("#adPart").value;
+    let n = 0;
+    raw.split("\n").forEach(line => {
+      const s = line.trim();
+      if (!s) return;
+      if (s.startsWith("#")){ topic = s.replace(/^#+\s*/,"") || topic; return; }
+      const m = s.split(/\s*\|\s*|\s*::\s*|\s+—\s+/);
+      if (m.length < 2 || !m[0].trim() || !m[1].trim()) return;
+      S.cards.push(newCard({subjectId: viewCards.sel.subjectId, termId: viewCards.sel.termId, part, topic,
+                            q: m[0].trim(), a: m.slice(1).join(" | ").trim()}));
+      n++;
+    });
+    if (!n) return toast("Couldn't read any lines — use question | answer.");
+    save("meta", "deck:" + viewCards.sel.subjectId);
+    toast(`${n} cards added.`); render();
+  },
+  "del-card": el => {
+    const c = S.cards.find(x => x.id === el.dataset.id); if (!c) return;
+    S.cards = S.cards.filter(x => x.id !== c.id);
+    saveCard(c); render();
+  },
+  "new-subject": () => {
+    const name = prompt("Subject name (e.g. Chemistry)");
+    if (!name || !name.trim()) return;
+    const sub = {id: uid("s_"), name: name.trim(), colorIdx: S.subjects.length % SUBJECT_COLORS.length};
+    S.subjects.push(sub);
+    viewCards.sel.subjectId = sub.id;
+    save("meta", "deck:"+sub.id); render();
+  },
+  "del-subject": () => {
+    const sub = subjectOf(viewCards.sel.subjectId); if (!sub) return;
+    const n = S.cards.filter(c => c.subjectId === sub.id).length;
+    if (!confirm(`Delete ${sub.name} and its ${n} cards? This can't be undone.`)) return;
+    S.cards = S.cards.filter(c => c.subjectId !== sub.id);
+    S.subjects = S.subjects.filter(s => s.id !== sub.id);
+    viewCards.sel.subjectId = S.subjects[0] ? S.subjects[0].id : "";
+    if (Store.db) Store.db.collection("decks").doc(sub.id).delete().catch(()=>{});
+    save("meta"); render();
+  },
+  "clear-examples": () => {
+    if (!confirm("Remove the example cards?")) return;
+    const subs = new Set(S.cards.filter(c => c.example).map(c => c.subjectId));
+    S.cards = S.cards.filter(c => !c.example);
+    S.subjects = S.subjects.filter(s => S.cards.some(c => c.subjectId === s.id) || !subs.has(s.id));
+    save("meta", ...[...subs].map(id => "deck:"+id));
+    toast("Examples cleared — the app is yours now."); render();
+  },
+
+  /* --- settings --- */
+  "notify": async () => {
+    if (!("Notification" in window)) return toast("This browser can't show reminders.");
+    if (S.settings.notify){ S.settings.notify = false; save("meta"); render(); return; }
+    let p = Notification.permission;
+    if (p !== "granted") p = await Notification.requestPermission();
+    if (p === "granted"){
+      S.settings.notify = true; save("meta");
+      new Notification("Reminders on", {body:"You'll get a nudge when your cards start fading."});
+    } else toast("Your browser blocked reminders.");
+    render();
+  },
+  "export": () => {
+    const blob = new Blob([JSON.stringify(S,null,2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `half-term-recall-${todayKey()}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    toast("Backup downloaded.");
+  },
+  "import": () => {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "application/json";
+    inp.onchange = () => {
+      const f = inp.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const data = JSON.parse(r.result);
+          if (!data.cards || !data.subjects) throw new Error("bad file");
+          S = migrate(data); Store.pushAll(S); Store.writeLocal(S);
+          toast("Backup restored."); render();
+        } catch(e){ toast("That file didn't look like a backup."); }
+      };
+      r.readAsText(f);
+    };
+    inp.click();
+  },
+  "reset": () => {
+    if (!confirm("Delete every card, result and streak, and start again?")) return;
+    S = freshState(); Store.pushAll(S); Store.writeLocal(S);
+    toast("Reset."); render();
+  }
+};
+
+/* change handlers for the selects/inputs that live inside views */
+function wireView(){
+  const on = (sel, ev, fn) => { const el = $(sel); if (el) el.addEventListener(ev, fn); };
+  on("#cdSubject","change", e => { viewCards.sel.subjectId = e.target.value; render(); });
+  on("#cdTerm","change", e => { viewCards.sel.termId = e.target.value; render(); });
+  on("#stTime","change", e => { S.settings.reminderTime = e.target.value; save("meta"); toast("Reminder time saved."); });
+  on("#stGoal","change", e => { S.settings.dailyGoal = clamp(Number(e.target.value)||25, 5, 200); save("meta"); });
+
+  document.querySelectorAll("input[data-term]").forEach(inp => {
+    inp.addEventListener("change", e => {
+      const t = termOf(e.target.dataset.term); if (!t) return;
+      t[e.target.dataset.kind] = e.target.value;
+      save("meta"); renderTopbar();
+      toast("Test date saved.");
+    });
+  });
+
+  const upd = () => {
+    const c = $("#rvCount"); if (!c) return;
+    const subjectId = $("#rvSubject").value, termId = $("#rvTerm").value, part = $("#rvPart").value;
+    const n = cardsFor({termId, subjectId: subjectId||undefined, part: part==="AB"?undefined:part}).length;
+    c.textContent = `${n} card${n===1?"":"s"} in that selection`;
+  };
+  ["#rvSubject","#rvTerm","#rvPart"].forEach(s => on(s,"change",upd));
+  upd();
+}
+
+/* keyboard shortcuts during a session */
+document.addEventListener("keydown", e => {
+  if (!session || session.finished) return;
+  const typing = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA";
+  if (typing && e.key === "Enter"){ e.preventDefault(); ACTIONS["submit-type"](); return; }
+  if (typing) return;
+  if (e.key === " " && !session.revealed && session.view === "flash"){ e.preventDefault(); reveal(); return; }
+  if (e.key.toLowerCase() === "d" && !session.revealed){ e.preventDefault(); ACTIONS[session.test?"dunno-test":"dunno"](); return; }
+  if (e.key === "Escape"){ ACTIONS["quit"](); return; }
+  if (!session.revealed && session.view === "choice" && /^[1-4]$/.test(e.key)){
+    const btns = document.querySelectorAll("[data-act='choose']");
+    const b = btns[Number(e.key)-1]; if (b) b.click();
+    return;
+  }
+  if (session.revealed){
+    if (session.test){
+      if (e.key === "Enter" && session.verdict !== null){ e.preventDefault(); ACTIONS["next-test"](); }
+      return;
+    }
+    if (session.verdict === "no"){
+      if (/^[1-4]$/.test(e.key) || e.key === "Enter" || e.key === " "){ e.preventDefault(); answer(0); }
+      return;
+    }
+    if (/^[1-4]$/.test(e.key)) answer(Number(e.key)-1);
+  }
+});
+
+/* ---------------------------------------------------------- reminders */
+function nudgeCheck(){
+  if (!S || !S.settings.notify || !("Notification" in window) || Notification.permission !== "granted") return;
+  const now = Date.now();
+  const due = dueCards().length;
+  const sinceLast = now - (S.settings.lastNudge || 0);
+
+  // 1. a batch has reached the edge of forgetting
+  if (due >= 8 && sinceLast > 4*3600000){
+    new Notification(`${due} cards are fading`, {
+      body: "They've dropped to about 90% recall — the best moment to review them. Ten minutes does it.",
+      tag: "htr-due"
+    });
+    S.settings.lastNudge = now; save("meta"); return;
+  }
+  // 2. the daily reminder
+  const [h,m] = (S.settings.reminderTime||"17:30").split(":").map(Number);
+  const d = new Date(); const mins = d.getHours()*60 + d.getMinutes();
+  const target = h*60 + m;
+  const doneToday = (S.days[todayKey()]||{}).reviewed || 0;
+  if (mins >= target && mins < target + 30 && doneToday === 0 && due > 0 && sinceLast > 12*3600000){
+    new Notification("Revision time", {body: `${due} cards are waiting. Keeping the streak is the whole trick.`, tag:"htr-daily"});
+    S.settings.lastNudge = now; save("meta");
+  }
+}
+
+/* ------------------------------------------------------------- theme */
+function applyTheme(){
+  const t = S ? S.settings.theme : "auto";
+  if (t === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+}
+$("#themeBtn").addEventListener("click", () => {
+  const order = ["auto","light","dark"];
+  S.settings.theme = order[(order.indexOf(S.settings.theme)+1) % 3];
+  applyTheme(); save("meta");
+  toast(`Theme: ${S.settings.theme}`);
+});
+$("#duePill").addEventListener("click", () => {
+  const due = dueCards();
+  if (due.length) startSession(due, {title:"Due now"});
+  else go("revise");
+});
+
+/* --------------------------------------------------------------- boot */
+function migrate(data){
+  const base = freshState();
+  const s = {...base, ...data};
+  s.settings = {...base.settings, ...(data.settings||{})};
+  s.days = data.days || {};
+  s.results = data.results || [];
+  s.cards = (data.cards||[]).map(c => ({...newCard({subjectId:c.subjectId, termId:c.termId, q:c.q, a:c.a}), ...c}));
+  return s;
+}
+
+async function boot(){
+  const local = Store.readLocal();
+  S = local ? migrate(local) : freshState();
+  applyTheme();
+  route = readRoute();
+  render();
+  if (!local) Store.writeLocal(S);
+
+  const db = await Store.connect();
+  if (db){
+    const remote = await Store.pull();
+    if (remote && (!local || (remote.updatedAt||0) > (local.updatedAt||0))){
+      S = migrate(remote); applyTheme(); render(); Store.writeLocal(S);
+    } else {
+      await Store.pushAll(S);
+    }
+    render();
+  }
+
+  nudgeCheck();
+  setInterval(() => { if (!session){ renderTopbar(); nudgeCheck(); } }, 60000);
+}
+boot();
+</script>
+<!-- /ARTIFACT:BODY -->
+</body>
+</html>
