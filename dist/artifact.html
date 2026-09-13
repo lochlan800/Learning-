@@ -1719,33 +1719,63 @@ const ACTIONS = {
     } else toast("Your browser blocked reminders.");
     render();
   },
-  "export": () => {
-    const blob = new Blob([JSON.stringify(S,null,2)], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
+  "export": async () => {
+    const json = JSON.stringify(S, null, 2);
+    const filename = `half-term-recall-${todayKey()}.json`;
+    /* Published as an Artifact the page can't hand over a file directly —
+       the downloads capability asks the viewer first. Standalone, a plain
+       object URL is all it takes. */
+    let dl = null;
+    try { dl = (window.claude && window.claude.use) ? await window.claude.use("downloads") : null; } catch(e){}
+    if (dl){
+      try { await dl.save({filename, data: json}); toast("Backup saved."); }
+      catch(err){ toast(err && err.code === "declined" ? "Backup cancelled." : "Couldn't save a file here — copy it out of Import/Export instead."); }
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([json], {type:"application/json"}));
     const a = document.createElement("a");
-    a.href = url; a.download = `half-term-recall-${todayKey()}.json`;
+    a.href = url; a.download = filename;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url), 1000);
     toast("Backup downloaded.");
   },
   "import": () => {
-    const inp = document.createElement("input");
-    inp.type = "file"; inp.accept = "application/json";
-    inp.onchange = () => {
-      const f = inp.files[0]; if (!f) return;
+    $("#overlay").innerHTML = `
+    <div class="session" role="dialog" aria-label="Restore a backup">
+      <div class="s-top">
+        <button class="iconbtn" data-act="close-modal" aria-label="Close">✕</button>
+        <div class="s-count" style="margin-left:auto">Restore a backup</div>
+      </div>
+      <div class="s-body"><div class="s-inner">
+        <div class="card pad stack">
+          <p class="small muted">Pick the backup file, or paste the contents of one. This replaces everything
+          currently in the app, so export first if you have work you want to keep.</p>
+          <input type="file" id="impFile" accept="application/json,.json">
+          <label class="field">or paste the JSON
+            <textarea id="impText" rows="7" placeholder='{"version":1,"subjects":[…' spellcheck="false"></textarea></label>
+          <button class="btn primary" data-act="import-paste">Restore</button>
+        </div>
+      </div></div>
+    </div>`;
+    document.body.style.overflow = "hidden";
+    const f = $("#impFile");
+    if (f) f.addEventListener("change", () => {
+      const file = f.files && f.files[0]; if (!file) return;
       const r = new FileReader();
-      r.onload = () => {
-        try {
-          const data = JSON.parse(r.result);
-          if (!data.cards || !data.subjects) throw new Error("bad file");
-          S = migrate(data); Store.pushAll(S); Store.writeLocal(S);
-          toast("Backup restored."); render();
-        } catch(e){ toast("That file didn't look like a backup."); }
-      };
-      r.readAsText(f);
-    };
-    inp.click();
+      r.onload = () => { $("#impText").value = r.result; toast("File read — press Restore."); };
+      r.readAsText(file);
+    });
   },
+  "import-paste": () => {
+    try {
+      const data = JSON.parse($("#impText").value);
+      if (!data.cards || !data.subjects) throw new Error("bad file");
+      S = migrate(data); Store.pushAll(S); Store.writeLocal(S);
+      document.body.style.overflow = ""; $("#overlay").innerHTML = "";
+      toast("Backup restored."); render();
+    } catch(e){ toast("That didn't look like a backup file."); }
+  },
+  "close-modal": () => { document.body.style.overflow = ""; $("#overlay").innerHTML = ""; },
   "reset": () => {
     if (!confirm("Delete every card, result and streak, and start again?")) return;
     S = freshState(); Store.pushAll(S); Store.writeLocal(S);
@@ -1782,6 +1812,7 @@ function wireView(){
 
 /* keyboard shortcuts during a session */
 document.addEventListener("keydown", e => {
+  if (!session && e.key === "Escape" && $("#overlay").innerHTML){ ACTIONS["close-modal"](); return; }
   if (!session || session.finished) return;
   const typing = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA";
   if (typing && e.key === "Enter"){ e.preventDefault(); ACTIONS["submit-type"](); return; }
