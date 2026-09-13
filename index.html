@@ -427,7 +427,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
    through the artifact `db` capability when the page is published.
    ===================================================================== */
 
-const BUILD = 6;          // bump on every publish — shown on the Memory tab
+const BUILD = 7;          // bump on every publish — shown on the Memory tab
 const DAY = 86400000;
 const MIN = 60000;
 const NAV = [
@@ -605,9 +605,11 @@ const Store = {
    falls back to writing cards by hand. */
 const AI = {
   sample: null,
+  resolved: false,        // false until we know whether the writer is available
   async connect(){
     try { this.sample = (window.claude && window.claude.use) ? await window.claude.use("sample") : null; }
     catch(e){ this.sample = null; }
+    this.resolved = true;
     return this.sample;
   }
 };
@@ -720,13 +722,20 @@ async function generateCards(more=false){
 
 function renderGen(){
   const host = $("#genPanel");
-  if (host) host.innerHTML = genPanelHTML();
+  if (!host) return;
+  host.innerHTML = genPanelHTML();
+  const box = $("#genTopic");
+  if (box) box.addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); generateCards(false); }   // Enter writes the cards
+  });
 }
 
 function genPanelHTML(){
   if (!AI.sample){
-    return `<p class="small muted">Card writing runs on the published version of this app, where it can ask Claude.
-      On this copy, write your cards in the box below — or paste a whole list at once.</p>`;
+    return `<div class="banner"><span class="ic">✎</span><div>
+      <b>Writing cards for you isn't available here.</b> It needs to ask Claude on your account, which only works
+      on the published version of the app with permission granted. Use the box below to type cards out, or paste a
+      whole lesson's worth at once.</div></div>`;
   }
   if (gen.status === "thinking" || gen.status === "writing"){
     return `<div class="stack">
@@ -1437,6 +1446,9 @@ function testTile(t, kind){
 function viewCards(){
   const t = currentTerm();
   const sel = viewCards.sel || (viewCards.sel = {termId:t.id, subjectId: S.subjects[0] ? S.subjects[0].id : ""});
+  /* With no card writer available, the by-hand form is the only way in, so open
+     it — but only once we actually know, so it doesn't flash open at boot. */
+  if (viewCards.manual === undefined && AI.resolved) viewCards.manual = !AI.sample;
   if (!S.subjects.some(s => s.id === sel.subjectId)) sel.subjectId = S.subjects[0] ? S.subjects[0].id : "";
   const list = cardsFor({termId:sel.termId, subjectId:sel.subjectId});
   const topics = {};
@@ -1465,13 +1477,17 @@ function viewCards(){
       <h2>Tell it your topic</h2>
       <span class="note">${esc((subjectOf(sel.subjectId)||{}).name||"")} · ${esc((termOf(sel.termId)||{}).name||"")}</span>
     </div>
-    <div id="genPanel">${genPanelHTML()}</div>
+    <div id="genPanel"></div>
   </section>
 
   <section class="card pad">
-    <div class="sec-head"><h2>Or write them yourself</h2></div>
+    <button class="btn ghost" data-act="toggle-manual" aria-expanded="${viewCards.manual?"true":"false"}"
+      style="padding-left:0">${viewCards.manual?"▾":"▸"} Type out a card myself, one question at a time</button>
+    <div id="manualBox"${viewCards.manual?"":" hidden"} style="margin-top:14px">
+    <p class="small muted" style="margin-bottom:14px">This box makes <b>one card</b> at a time, so it needs a question
+      <i>and</i> its answer. To get cards from just a topic name, use the box above.</p>
     <div class="grid2">
-      <label class="field">Topic
+      <label class="field">Topic it belongs to
         <input type="text" id="adTopic" placeholder="e.g. Photosynthesis" value="${esc(viewCards.lastTopic||"")}"></label>
       <label class="field">Which half of the half-term
         <select id="adPart">
@@ -2062,10 +2078,13 @@ const ACTIONS = {
   },
 
   /* --- cards management --- */
+  "toggle-manual": () => { viewCards.manual = !viewCards.manual; render(); },
   "toggle-bulk": () => { const b = $("#bulkBox"); b.hidden = !b.hidden; if (!b.hidden) $("#adBulk").focus(); },
   "add-card": () => {
     const q = $("#adQ").value.trim(), a = $("#adA").value.trim();
-    if (!q || !a) return toast("Needs both a question and an answer.");
+    if (!q || !a) return toast(AI.sample
+      ? "This box needs a question and an answer. For cards from a topic, use the box above."
+      : "This box needs both a question and an answer.");
     const topic = canonicalTopic(viewCards.sel.subjectId, $("#adTopic").value.trim() || "General");
     viewCards.lastTopic = topic;
     const c = newCard({subjectId: viewCards.sel.subjectId, termId: viewCards.sel.termId, part: $("#adPart").value, topic, q, a});
@@ -2203,6 +2222,7 @@ const ACTIONS = {
 /* change handlers for the selects/inputs that live inside views */
 function wireView(){
   const on = (sel, ev, fn) => { const el = $(sel); if (el) el.addEventListener(ev, fn); };
+  if ($("#genPanel")) renderGen();
   on("#cdSubject","change", e => { viewCards.sel.subjectId = e.target.value; render(); });
   on("#cdTerm","change", e => { viewCards.sel.termId = e.target.value; render(); });
   on("#stTime","change", e => { S.settings.reminderTime = e.target.value; save("meta"); toast("Reminder time saved."); });
