@@ -229,9 +229,12 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .half .test{font-size:12.5px;color:var(--ink-3);margin-top:4px}
 .half .cnt{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:8px}
 
-/* subject rows */
-.subj{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--line)}
-.subj:last-child{border-bottom:0}
+/* subject + topic rows */
+.subjblock{border-bottom:1px solid var(--line)}
+.subjblock:last-child{border-bottom:0}
+.subjhead{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--surface-2);flex-wrap:wrap}
+.topicrow{display:flex;align-items:center;gap:13px;padding:11px 16px 11px 30px;border-top:1px solid var(--line);flex-wrap:wrap}
+.topic-name{font-weight:600;font-size:14.5px;flex:1 1 130px;min-width:0}
 .subj-dot{width:10px;height:10px;border-radius:3px;flex:none}
 .subj-name{font-weight:600;font-size:15px;flex:1 1 130px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .subj-meter{flex:2 1 150px;min-width:100px;display:flex;flex-direction:column;gap:5px}
@@ -602,26 +605,34 @@ const gen = {status:"idle", items:[], msg:"", written:0, ctl:null, topic:"", not
 
 function genPrompt(subject, topic, level, notes, count, avoid){
   return [
-    `You are writing revision flashcards for a school student to test themselves with.`,
+    `You are writing revision flashcards for a school student to test themselves on ONE specific topic.`,
     ``,
     `Subject: ${subject}`,
-    `Topic: ${topic}`,
+    `TOPIC (the only thing these cards may be about): ${topic}`,
     level ? `Level: ${level} (British curriculum)` : `Level: secondary school (British curriculum)`,
-    notes ? `\nWhat the lesson actually covered — treat this as the source of truth and stay inside it:\n${notes}` : "",
-    avoid.length ? `\nAlready in the deck, so do not repeat these or anything close to them:\n${avoid.map(q => "- " + q).join("\n")}` : "",
+    notes ? `\nWhat the lesson actually covered. Every card must come from this and nothing outside it:\n${notes}` : "",
+    avoid.length ? `\nAlready in the deck, so do not repeat these or write anything close to them:\n${avoid.map(q => "- " + q).join("\n")}` : "",
     ``,
-    `Write ${count} flashcards testing recall of this topic at this level.`,
-    `Rules:`,
+    `Write ${count} flashcards on "${topic}" specifically.`,
+    ``,
+    `Staying on topic — this matters more than anything else below:`,
+    `- Every card must test something you only know if you studied "${topic}". A question a student could answer from general ${subject} knowledge is a failed card.`,
+    `- Go into the actual substance of the topic: its named parts, key terms, steps in order, numbers, units, dates, rules and common exceptions.`,
+    `- Do not drift into neighbouring topics, the wider subject, or background context.`,
+    notes ? `- The notes above set the boundary. If something is not in them, leave it out.`
+          : `- Break "${topic}" into its specific sub-parts and spread the cards across all of them, rather than asking the same headline question several ways.`,
+    ``,
+    `Writing the cards:`,
     `- One fact, definition, rule or worked step per card — never two.`,
     `- The question must be answerable from memory in under 15 seconds.`,
     `- Keep answers short: under 12 words where you can, and never a paragraph.`,
-    `- Use the subject's real vocabulary, units and notation.`,
-    `- Mix it up: definitions, key facts, "what happens if", and short worked examples with real numbers.`,
+    `- Use the topic's real vocabulary, units and notation.`,
+    `- Mix definitions, key facts, "what happens if", and short worked examples with real numbers.`,
     `- British spelling and conventions.`,
     `- No duplicates and no near-duplicates of each other.`,
     ``,
     `Reply with only a JSON array of {"q": string, "a": string} objects.`,
-    `Example: [{"q":"Which organelle releases energy in respiration?","a":"The mitochondria"}]`
+    `Example for the topic "Enzymes": [{"q":"What happens to an enzyme above its optimum temperature?","a":"It denatures — the active site changes shape"}]`
   ].filter(x => x !== "").join("\n");
 }
 
@@ -740,7 +751,13 @@ function genPanelHTML(){
   return `<div class="stack">
     ${gen.status === "error" ? `<div class="verdict no" style="font-weight:500">${esc(gen.msg)}</div>` : ""}
     <label class="field">What topic are you doing?
-      <input type="text" id="genTopic" placeholder="e.g. Photosynthesis, Trigonometry, The Weimar Republic" value="${esc(gen.topic)}"></label>
+      <input type="text" id="genTopic" list="genTopicList" autocomplete="off"
+        placeholder="e.g. The light-dependent reaction, Solving linear equations" value="${esc(gen.topic)}">
+      <datalist id="genTopicList">${
+        topicsFor({subjectId: viewCards.sel.subjectId}).map(tp => `<option value="${esc(tp.name)}"></option>`).join("")
+      }</datalist>
+      <span class="small muted" style="font-weight:400">The narrower you name it, the sharper the questions — "Trigonometry: SOHCAHTOA"
+        beats "Maths". Type a topic you already have to add more to it.</span></label>
     <div class="grid3">
       <label class="field">Your year / level
         <input type="text" id="genLevel" placeholder="e.g. Year 9" value="${level}"></label>
@@ -895,6 +912,38 @@ function readiness(cards){
   const total = cards.reduce((n,c) => n + strength(c), 0);
   return total / cards.length;
 }
+
+/* Topics are the real unit of work — a test is on "Photosynthesis", not on
+   "Biology" — so progress, revision and mocks are all reckoned per topic.
+   A topic is identified by its subject plus its name, compared loosely so
+   "photosynthesis" and "Photosynthesis " are the same topic. */
+const topicKey = (subjectId, name) => subjectId + "::" + norm(name);
+
+function topicsFor(filter={}){
+  const map = new Map();
+  cardsFor(filter).forEach(c => {
+    const key = topicKey(c.subjectId, c.topic);
+    let e = map.get(key);
+    if (!e){ e = {key, name: c.topic, subjectId: c.subjectId, termId: c.termId, cards: [], parts: new Set()}; map.set(key, e); }
+    e.cards.push(c); e.parts.add(c.part);
+  });
+  const now = Date.now();
+  return [...map.values()].map(e => ({
+    key: e.key, name: e.name, subjectId: e.subjectId, termId: e.termId, cards: e.cards,
+    part: e.parts.size > 1 ? "A+B" : [...e.parts][0],
+    strength: readiness(e.cards) || 0,
+    due: e.cards.filter(c => c.reps && c.due <= now).length,
+    unseen: e.cards.filter(c => !c.reps).length
+  })).sort((a,b) => a.strength - b.strength || a.name.localeCompare(b.name));
+}
+const cardsInTopic = key => S.cards.filter(c => topicKey(c.subjectId, c.topic) === key);
+
+/* Reuse the spelling already in the deck so "Photosynthesis" and
+   "photosynthesis" don't become two topics you revise separately. */
+function canonicalTopic(subjectId, name){
+  const hit = S.cards.find(c => c.subjectId === subjectId && norm(c.topic) === norm(name));
+  return hit ? hit.topic : name;
+}
 function streak(){
   let n = 0;
   for (let i=0;i<400;i++){
@@ -1018,9 +1067,9 @@ function viewToday(){
 
   <section class="card">
     <div class="pad" style="padding-bottom:4px">
-      <div class="sec-head"><h2>Subjects this half-term</h2><span class="note">how much is still in there</span></div>
+      <div class="sec-head"><h2>Topics this half-term</h2><span class="note">weakest first</span></div>
     </div>
-    ${S.subjects.length ? S.subjects.map(sub => subjectRow(sub, t)).join("")
+    ${S.subjects.length ? S.subjects.map(sub => subjectBlock(sub, t)).join("")
       : `<div class="pad"><div class="empty">No subjects yet.<a class="btn" href="#/cards">Add your first cards</a></div></div>`}
   </section>
 
@@ -1087,20 +1136,37 @@ function halfCard(t, part, testTs, testName){
   </div>`;
 }
 
-function subjectRow(sub, t){
+function subjectBlock(sub, t){
   const cards = cardsFor({termId:t.id, subjectId:sub.id});
   const r = readiness(cards);
-  const due = cards.filter(c => c.due <= Date.now()).length;
-  return `<div class="subj">
-    <span class="subj-dot" style="background:${subjColor(sub)}"></span>
-    <span class="subj-name">${esc(sub.name)}</span>
-    <div class="subj-meter">
-      <div class="t"><span>${cards.length} cards${due?` · <b style="color:var(--mark)">${due} due</b>`:""}</span>
-        <span class="num">${r===null?"—":Math.round(r*100)+"%"}</span></div>
-      <div class="bar ${r===null?"":strengthClass(r)}"><span style="width:${r===null?0:Math.round(r*100)}%"></span></div>
+  const topics = topicsFor({termId:t.id, subjectId:sub.id});
+  return `<div class="subjblock">
+    <div class="subjhead">
+      <span class="subj-dot" style="background:${subjColor(sub)}"></span>
+      <span class="subj-name">${esc(sub.name)}</span>
+      <span class="small muted">${topics.length} topic${topics.length===1?"":"s"} · ${cards.length} cards</span>
+      <span class="num" style="margin-left:auto;font-size:14px;color:var(--${r===null?"ink-3":strengthClass(r)})">${r===null?"—":Math.round(r*100)+"%"}</span>
+      <button class="btn sm" data-act="topic-for" data-id="${sub.id}">+ Topic</button>
     </div>
-    <button class="btn sm" data-act="topic-for" data-id="${sub.id}" title="Write cards for a topic in ${esc(sub.name)}">+ Topic</button>
-    <button class="btn sm" data-act="start-subject" data-id="${sub.id}">Revise</button>
+    ${topics.length ? topics.map(tp => topicRow(tp)).join("")
+      : `<div class="topicrow"><span class="small muted">No topics yet — add what you covered in class.</span></div>`}
+  </div>`;
+}
+
+function topicRow(tp){
+  const pct = Math.round(tp.strength*100);
+  const note = tp.unseen === tp.cards.length ? `${tp.cards.length} cards, none studied yet`
+    : tp.due ? `${tp.cards.length} cards · <b style="color:var(--mark)">${tp.due} fading</b>`
+    : `${tp.cards.length} cards`;
+  return `<div class="topicrow">
+    <span class="topic-name">${esc(tp.name)}</span>
+    <span class="chip ${tp.part==="A"?"a":tp.part==="B"?"b":"outline"}">Part ${tp.part}</span>
+    <div class="subj-meter">
+      <div class="t"><span>${note}</span>
+        <span class="num">${tp.cards.length && tp.unseen < tp.cards.length ? pct+"%" : "—"}</span></div>
+      <div class="bar ${strengthClass(tp.strength)}"><span style="width:${pct}%"></span></div>
+    </div>
+    <button class="btn sm" data-act="start-topic" data-key="${esc(tp.key)}">Revise</button>
   </div>`;
 }
 
@@ -1161,6 +1227,10 @@ function viewRevise(){
         </select></label>
       <label class="field">Half-term
         <select id="rvTerm">${S.terms.map(x=>`<option value="${x.id}"${x.id===t.id?" selected":""}>${esc(x.name)}</option>`).join("")}</select></label>
+      <label class="field">Topic
+        <select id="rvTopic"><option value="">Every topic</option>
+          ${topicsFor({termId:t.id}).map(tp=>`<option value="${esc(tp.key)}">${esc(tp.name)}</option>`).join("")}
+        </select></label>
       <label class="field">Which part
         <select id="rvPart">
           <option value="AB">Whole half-term (A + B)</option>
@@ -1192,6 +1262,21 @@ function viewRevise(){
   </section>`;
 }
 
+/* The selection the Revise form currently describes — shared by the card
+   count under the button and the button itself, so they can't disagree. */
+function customSelection(){
+  const subjectId = ($("#rvSubject")||{}).value || "";
+  const termId = ($("#rvTerm")||{}).value || currentTerm().id;
+  const key = ($("#rvTopic")||{}).value || "";
+  const part = ($("#rvPart")||{}).value || "AB";
+  let cards = cardsFor({termId, subjectId: subjectId||undefined, part: part==="AB"?undefined:part});
+  if (key) cards = cards.filter(c => topicKey(c.subjectId, c.topic) === key);
+  const term = termOf(termId) || currentTerm();
+  const topicName = key && cards.length ? cards[0].topic : "";
+  const title = topicName || `${term.name}${part==="AB" ? "" : " · Part " + part}`;
+  return {cards, title};
+}
+
 function deckTile(title, n, desc, act, disabled){
   return `<div class="card pad" style="display:flex;flex-direction:column;gap:9px">
     <div class="spread"><h3 style="font-size:16px">${title}</h3><span class="num" style="font-size:26px;color:${n?"var(--ink)":"var(--ink-3)"}">${n}</span></div>
@@ -1210,6 +1295,21 @@ function viewTests(){
     <div class="grid2">
       ${testTile(t,"mid")}
       ${testTile(t,"end")}
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div class="sec-head"><h2>Test one topic</h2><span class="note">for the test on just this week's work</span></div>
+    <p class="small muted" style="margin-bottom:12px">Every question from one topic, marked at the end, with a list of exactly what you dropped.</p>
+    <div class="row" style="align-items:flex-end">
+      <label class="field" style="flex:1 1 240px">Topic
+        <select id="ttTopic">
+          ${topicsFor({termId:t.id}).map(tp => {
+            const sub = subjectOf(tp.subjectId);
+            return `<option value="${esc(tp.key)}">${esc(sub?sub.name:"")} · ${esc(tp.name)} (${tp.cards.length})</option>`;
+          }).join("") || `<option value="">No topics yet</option>`}
+        </select></label>
+      <button class="btn primary" data-act="start-topic-test">Sit it</button>
     </div>
   </section>
 
@@ -1233,8 +1333,10 @@ function viewTests(){
     ${results.length ? `<div class="stack">${results.slice(0,12).map(r => {
       const sub = subjectOf(r.subjectId), term = termOf(r.termId);
       const p = Math.round(r.score/r.total*100);
+      const what = r.kind === "topic" ? esc(r.topic || "Topic test")
+        : `${esc(term?term.name:"—")} · ${r.kind==="mid"?"Mid":"Whole"} half-term`;
       return `<div class="spread" style="border-bottom:1px solid var(--line);padding-bottom:9px">
-        <div><b>${esc(term?term.name:"—")} · ${r.kind==="mid"?"Mid":"Whole"} half-term</b>
+        <div><b>${what}</b>
           <div class="small muted">${sub?esc(sub.name):"All subjects"} · ${fmtDateLong(r.date)}</div></div>
         <div class="row">
           <span class="num" style="font-size:19px">${r.score}/${r.total}</span>
@@ -1496,7 +1598,8 @@ function startSession(cards, opts={}){
   const items = shuffle(cards).map(c => ({id:c.id, needed:1, worst:3, wrong:0}));
   session = {
     queue: items, mode: opts.mode || "mixed", test: !!opts.test,
-    title: opts.title || "Revision", kind: opts.kind, termId: opts.termId, subjectId: opts.subjectId,
+    title: opts.title || "Revision", kind: opts.kind, termId: opts.termId,
+    subjectId: opts.subjectId, topicName: opts.topicName || "",
     total: items.length, done: 0, answered: 0, correct: 0,
     revealed: false, verdict: null, chosen: null, results: [], finished: false
   };
@@ -1728,7 +1831,8 @@ function finishSession(){
     });
     S.results.push({
       id: uid("r_"), termId: session.termId, subjectId: session.subjectId || "",
-      kind: session.kind, date: Date.now(), score: session.correct, total: session.total, missed
+      kind: session.kind, topic: session.topicName || "",
+      date: Date.now(), score: session.correct, total: session.total, missed
     });
     Store.mark("meta"); S.subjects.forEach(s => Store.mark("deck:"+s.id)); Store.schedule(S);
     session.finished = true;
@@ -1802,17 +1906,26 @@ const ACTIONS = {
   "start-new": () => startSession(newCards(), {title:"New cards"}),
   "start-weak": () => startSession(S.cards.filter(c => c.reps && strength(c) < 0.7), {title:"Weak spots"}),
   "start-leech": () => startSession(S.cards.filter(c => c.lapses >= 3), {title:"Tricky cards"}),
-  "start-subject": el => {
-    const t = currentTerm();
-    const cards = cardsFor({termId:t.id, subjectId:el.dataset.id});
-    const due = cards.filter(c => c.due <= Date.now());
-    startSession(due.length ? due : cards, {title: (subjectOf(el.dataset.id)||{}).name || "Revision"});
-  },
   "start-custom": () => {
-    const subjectId = $("#rvSubject").value, termId = $("#rvTerm").value;
-    const part = $("#rvPart").value, mode = $("#rvMode").value;
-    const cards = cardsFor({termId, subjectId: subjectId||undefined, part: part==="AB"?undefined:part});
-    startSession(cards, {mode, title:`${(termOf(termId)||{}).name||""} · Part ${part}`});
+    const {cards, title} = customSelection();
+    startSession(cards, {mode: $("#rvMode").value, title});
+  },
+  "start-topic": el => {
+    const cards = cardsInTopic(el.dataset.key);
+    const name = cards.length ? cards[0].topic : "Topic";
+    const due = cards.filter(c => c.reps && c.due <= Date.now());
+    startSession(due.length >= 4 ? due : cards, {title: name});
+  },
+  "start-topic-test": () => {
+    const key = $("#ttTopic").value;
+    if (!key) return toast("Pick a topic to be tested on.");
+    const cards = cardsInTopic(key);
+    const name = cards.length ? cards[0].topic : "Topic";
+    startSession(cards, {
+      test:true, kind:"topic", termId: currentTerm().id,
+      subjectId: cards[0] && cards[0].subjectId, topicName: name,
+      title: `${name} · topic test`
+    });
   },
   "start-test": el => {
     const t = currentTerm(), kind = el.dataset.kind;
@@ -1871,13 +1984,14 @@ const ACTIONS = {
     const keep = gen.items.filter(i => i.keep);
     if (!keep.length) return;
     const sel = viewCards.sel;
+    const topic = canonicalTopic(sel.subjectId, gen.topic);
     keep.forEach(i => S.cards.push(newCard({
       subjectId: sel.subjectId, termId: sel.termId, part: gen.part || "A",
-      topic: gen.topic, q: i.q, a: i.a
+      topic, q: i.q, a: i.a
     })));
     save("meta", "deck:" + sel.subjectId);
     gen.status = "idle"; gen.items = []; gen.notes = "";
-    toast(`${keep.length} cards added to ${gen.topic}.`);
+    toast(`${keep.length} cards added to ${topic}.`);
     render();
   },
 
@@ -1886,7 +2000,7 @@ const ACTIONS = {
   "add-card": () => {
     const q = $("#adQ").value.trim(), a = $("#adA").value.trim();
     if (!q || !a) return toast("Needs both a question and an answer.");
-    const topic = $("#adTopic").value.trim() || "General";
+    const topic = canonicalTopic(viewCards.sel.subjectId, $("#adTopic").value.trim() || "General");
     viewCards.lastTopic = topic;
     const c = newCard({subjectId: viewCards.sel.subjectId, termId: viewCards.sel.termId, part: $("#adPart").value, topic, q, a});
     S.cards.push(c); saveCard(c);
@@ -1894,13 +2008,13 @@ const ACTIONS = {
   },
   "add-bulk": () => {
     const raw = $("#adBulk").value;
-    let topic = $("#adTopic").value.trim() || "General";
+    let topic = canonicalTopic(viewCards.sel.subjectId, $("#adTopic").value.trim() || "General");
     const part = $("#adPart").value;
     let n = 0;
     raw.split("\n").forEach(line => {
       const s = line.trim();
       if (!s) return;
-      if (s.startsWith("#")){ topic = s.replace(/^#+\s*/,"") || topic; return; }
+      if (s.startsWith("#")){ topic = canonicalTopic(viewCards.sel.subjectId, s.replace(/^#+\s*/,"") || topic); return; }
       const m = s.split(/\s*\|\s*|\s*::\s*|\s+—\s+/);
       if (m.length < 2 || !m[0].trim() || !m[1].trim()) return;
       S.cards.push(newCard({subjectId: viewCards.sel.subjectId, termId: viewCards.sel.termId, part, topic,
@@ -2036,13 +2150,23 @@ function wireView(){
     });
   });
 
+  /* Keep the topic list in step with the subject and half-term above it. */
+  const rvTopics = () => {
+    const sel = $("#rvTopic"); if (!sel) return;
+    const cur = sel.value;
+    const list = topicsFor({termId: $("#rvTerm").value, subjectId: $("#rvSubject").value || undefined});
+    sel.innerHTML = `<option value="">Every topic</option>` +
+      list.map(tp => `<option value="${esc(tp.key)}">${esc(tp.name)}</option>`).join("");
+    if (list.some(tp => tp.key === cur)) sel.value = cur;
+  };
   const upd = () => {
     const c = $("#rvCount"); if (!c) return;
-    const subjectId = $("#rvSubject").value, termId = $("#rvTerm").value, part = $("#rvPart").value;
-    const n = cardsFor({termId, subjectId: subjectId||undefined, part: part==="AB"?undefined:part}).length;
+    const n = customSelection().cards.length;
     c.textContent = `${n} card${n===1?"":"s"} in that selection`;
   };
-  ["#rvSubject","#rvTerm","#rvPart"].forEach(s => on(s,"change",upd));
+  ["#rvSubject","#rvTerm"].forEach(s => on(s,"change",() => { rvTopics(); upd(); }));
+  ["#rvTopic","#rvPart"].forEach(s => on(s,"change",upd));
+  if ($("#rvTopic")) rvTopics();
   upd();
 }
 

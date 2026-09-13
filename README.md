@@ -8,6 +8,12 @@ Open `index.html` in a browser. No build step, no install, no account.
 
 ## What it does
 
+**Topics are the unit, not subjects.** A test is on "Photosynthesis", not on "Biology", so that's
+what the app tracks. The home screen lists every topic in the current half-term, weakest first,
+with its own recall percentage and a Revise button; the Revise screen filters down to a single
+topic; and Tests has a per-topic mock for the test on just this week's work. Subjects are only
+there to group topics.
+
 **Cards come back exactly when you're about to forget them.** Every card carries a stability
 value. Recall is modelled as `R = 0.9 ^ (t / S)` — the chance you can still pull it out of your
 head `t` days after the last time you got it right. A card falls due when that hits 90%, which
@@ -40,11 +46,18 @@ in a tab, so pin it or add it to your home screen.
 ## Getting your own material in
 
 **Tell it the topic and it writes the cards.** Under **Cards**, pick the subject and half-term,
-type the topic you covered in the lesson ("Photosynthesis", "Trigonometry", "The Weimar
-Republic"), set your year group, and it writes a set of questions for you. Paste your lesson
-notes into the optional box and it stays inside what your class actually covered. Nothing is
-added until you've read through the batch and unticked anything you weren't taught — and it
-won't repeat questions already in that topic, so "write more" genuinely extends the set.
+name the topic you covered in the lesson, set your year group, and it writes a set of questions
+for you. Name it narrowly — "Trigonometry: SOHCAHTOA" gets far sharper questions than "Maths" —
+and the box remembers topics you already have, so you add to one rather than starting a
+near-duplicate. Paste your lesson notes into the optional box and every card comes from them.
+
+The prompt is built to hold the line on specificity: a question a student could answer from
+general subject knowledge is treated as a failed card, and it's told to work through the topic's
+named parts, terms, steps, numbers and exceptions rather than circling the headline.
+
+Nothing is added until you've read through the batch and unticked anything you weren't taught —
+and questions already in that topic are sent as a do-not-repeat list, so "write more" genuinely
+extends the set.
 
 This runs on the published Artifact version, which can ask Claude on your account. Opened as a
 plain file there's no Claude to ask, so the panel says so and you write cards by hand instead.
